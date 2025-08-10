@@ -1,4 +1,4 @@
-name: universal ci
+name: sdk-install-demo ci
 on:
   push:
     branches: [ main ]
@@ -52,21 +52,16 @@ jobs:
         run: |
           $ANDROID_HOME/platform-tools/adb shell 'echo Hello Android!'
 
-      - name: "Install SDK"
-        if: false
+      - name: "Install Skip"
         run: |
-          HOST_TOOLCHAIN_URL="https://download.swift.org/development/xcode/swift-DEVELOPMENT-SNAPSHOT-2025-08-08-a/swift-DEVELOPMENT-SNAPSHOT-2025-08-08-a-osx.pkg"
-          curl -fsSL --retry 8 --retry-connrefused ${HOST_TOOLCHAIN_URL} --output swift.pkg
-          /usr/sbin/installer -pkg swift.pkg -target CurrentUserHomeDirectory
-          SWIFT_PATH=${HOME}/Library/Developer/Toolchains/$(basename ${HOST_TOOLCHAIN_URL} "-osx.pkg").xctoolchain/usr
-          ${SWIFT_PATH}/bin/swift --version
+          brew install skiptools/skip/skip
+          skip android sdk install
 
+      - name: "Test Swift Package"
+        run: |
           mkdir PackageDemo
           cd PackageDemo
-          ${SWIFT_PATH}/bin/swift package init
-          ${SWIFT_PATH}/bin/swift test
-
-          ${SWIFT_PATH}/bin/swift sdk install https://download.swift.org/swift-6.2-branch/static-sdk/swift-6.2-DEVELOPMENT-SNAPSHOT-2025-08-09-a/swift-6.2-DEVELOPMENT-SNAPSHOT-2025-08-09-a_static-linux-0.0.1.artifactbundle.tar.gz --checksum 157dbf0cc8465f72c00a765c5f99e24d06c06b71cbe59136421163aa2c0fa7eb
-
-
+          swift package init
+          swift test
+          skip android test
 
