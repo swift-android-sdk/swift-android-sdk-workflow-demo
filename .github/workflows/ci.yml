@@ -12,15 +12,15 @@ jobs:
           - name: 'macOS 13'
             os: 'macos-13'
             ANDROID_API: 28
-            ANDROID_ARCH: 'x86_64'
+            ANDROID_ARCH: 'x86'
           - name: 'macOS 14'
             os: 'macos-14'
             ANDROID_API: 28
-            ANDROID_ARCH: 'arm64-v8a'
+            ANDROID_ARCH: 'x86'
           - name: 'macOS 15'
             os: 'macos-15'
             ANDROID_API: 28
-            ANDROID_ARCH: 'arm64-v8a'
+            ANDROID_ARCH: 'x86'
       fail-fast: false
     runs-on: ${{ matrix.os }}
     env:
