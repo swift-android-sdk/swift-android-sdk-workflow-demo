@@ -15,9 +15,9 @@ jobs:
       - name: "Launch emulator"
         run: |
           # Install AVD files
-          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install 'system-images;android-28;default;armeabi-v7a'
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install 'system-images;android-28;default;x86_64'
           # Create emulator
-          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager create avd -n test -d "Nexus 10" -k 'system-images;android-28;default;armeabi-v7a' --force
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager create avd -n test -d "Nexus 10" -k 'system-images;android-28;default;x86_64' --force
           echo "y" | $ANDROID_HOME/emulator/emulator -list-avds
           echo "Starting emulator"
           # Start emulator in background
