@@ -32,9 +32,8 @@ jobs:
       ANDROID_ARCH: ${{ matrix.ANDROID_ARCH }}
     steps:
       - name: "Launch emulator"
-        timeout-minutes: 5
+        timeout-minutes: 10
         run: |
-
           # Install AVD files
           echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-${ANDROID_API};default;${ANDROID_ARCH}"
           # Create emulator
