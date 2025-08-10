@@ -38,13 +38,18 @@ jobs:
           echo "y" | $ANDROID_HOME/emulator/emulator -list-avds
           echo "Starting emulator"
           # Start emulator in background
-          nohup $ANDROID_HOME/emulator/emulator-headless -avd test -no-snapshot -no-window -no-audio -no-boot-anim -no-accel -no-metrics &
+          nohup $ANDROID_HOME/emulator/emulator -avd test -no-snapshot -no-window -no-audio -no-boot-anim -no-accel -no-metrics &
           # Fixed quoting around "\r"
           $ANDROID_HOME/platform-tools/adb wait-for-device shell 'while [[ -z $(getprop sys.boot_completed | tr -d "\r") ]]; do sleep 1; done; input keyevent 82'
           $ANDROID_HOME/platform-tools/adb devices
           echo "Emulator started"
 
+      - name: "Check Emulator"
+        run: |
+          $ANDROID_HOME/platform-tools/adb shell 'echo Hello Android!'
+
       - name: "Install SDK"
+        if: false
         run: |
           HOST_TOOLCHAIN_URL="https://download.swift.org/development/xcode/swift-DEVELOPMENT-SNAPSHOT-2025-08-08-a/swift-DEVELOPMENT-SNAPSHOT-2025-08-08-a-osx.pkg"
           curl -fsSL --retry 8 --retry-connrefused ${HOST_TOOLCHAIN_URL} --output swift.pkg
