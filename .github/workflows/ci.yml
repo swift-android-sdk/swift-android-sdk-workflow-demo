@@ -33,7 +33,7 @@ jobs:
           # Install AVD files
           echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-${ANDROID_API};default;${ANDROID_ARCH}"
           # Create emulator
-          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager create avd -f -n test -k "system-images;android-${ANDROID_API};default;${ANDROID_ARCH}" --force
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager create avd -f -n test -d "Nexus 10" -k "system-images;android-${ANDROID_API};default;${ANDROID_ARCH}" --force
           echo "y" | $ANDROID_HOME/emulator/emulator -list-avds
           echo "Starting emulator"
           # Start emulator in background
