@@ -12,6 +12,10 @@ jobs:
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
+      - name: "Check emulator"
+        run: |
+          avdmanager create avd -n test -k "system-images;android-28;default;x86" -c 200M -f
+          emulator -avd test -no-audio -no-accel -no-snapshot -no-window -camera-back none -camera-front none
       - name: "Install SDK"
         run: |
           HOST_TOOLCHAIN_URL="https://download.swift.org/development/xcode/swift-DEVELOPMENT-SNAPSHOT-2025-08-08-a/swift-DEVELOPMENT-SNAPSHOT-2025-08-08-a-osx.pkg"
