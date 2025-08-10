@@ -37,6 +37,18 @@ jobs:
           echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager create avd -f -n test -d "Nexus 10" -k "system-images;android-${ANDROID_API};default;${ANDROID_ARCH}" --force
           echo "y" | $ANDROID_HOME/emulator/emulator -list-avds
           echo "Starting emulator"
+
+          xml_content='<?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>com.apple.security.hypervisor</key>
+              <true/>
+          </dict>
+          </plist>'
+          eho "$xml_content" > entitlements.xml
+          codesign -s - --entitlements entitlements.xml --force ${ANDROID_HOME}/emulator/qemu/darwin-aarch64/qemu-system-aarch64-headless
+
           # Start emulator in background
           nohup $ANDROID_HOME/emulator/emulator -avd test -no-snapshot -no-window -no-audio -no-boot-anim -no-accel -no-metrics &
           # Fixed quoting around "\r"
