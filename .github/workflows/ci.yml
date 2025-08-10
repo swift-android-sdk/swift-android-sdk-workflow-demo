@@ -16,14 +16,15 @@ jobs:
         run: |
           find ${ANDROID_HOME} -name sdkmanager
           find ${ANDROID_HOME} -name emulator
-          sdkmanager "tools"
-          sdkmanager "platform-tools"
-          sdkmanager "platforms;android-28"
-          sdkmanager "system-images;android-28;default;x86"
-          sdkmanager --update
-          sdkmanager --licenses
-          avdmanager create avd -n test -k "system-images;android-28;default;x86" -c 200M -f
-          emulator -avd test -no-audio -no-accel -no-snapshot -no-window -camera-back none -camera-front none
+          find ${ANDROID_HOME} -name avdmanager
+          ${ANDROID_HOME}/tools/bin/sdkmanager "tools"
+          ${ANDROID_HOME}/tools/bin/sdkmanager "platform-tools"
+          ${ANDROID_HOME}/tools/bin/sdkmanager "platforms;android-28"
+          ${ANDROID_HOME}/tools/bin/sdkmanager "system-images;android-28;default;x86"
+          ${ANDROID_HOME}/tools/bin/sdkmanager --update
+          ${ANDROID_HOME}/tools/bin/sdkmanager --licenses
+          ${ANDROID_HOME}/tools/bin/avdmanager create avd -n test -k "system-images;android-28;default;x86" -c 200M -f
+          ${ANDROID_HOME}/emulator/emulator -avd test -no-audio -no-accel -no-snapshot -no-window -camera-back none -camera-front none
       - name: "Install SDK"
         run: |
           HOST_TOOLCHAIN_URL="https://download.swift.org/development/xcode/swift-DEVELOPMENT-SNAPSHOT-2025-08-08-a/swift-DEVELOPMENT-SNAPSHOT-2025-08-08-a-osx.pkg"
