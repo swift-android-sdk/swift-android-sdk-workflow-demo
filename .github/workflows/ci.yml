@@ -21,6 +21,10 @@ jobs:
             os: 'macos-15'
             ANDROID_API: 28
             ANDROID_ARCH: 'arm64-v8a'
+          - name: 'macOS 26'
+            os: 'macos-26'
+            ANDROID_API: 28
+            ANDROID_ARCH: 'arm64-v8a'
       fail-fast: false
     runs-on: ${{ matrix.os }}
     env:
@@ -37,19 +41,6 @@ jobs:
           echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager create avd -f -n test -d "Nexus 10" -k "system-images;android-${ANDROID_API};default;${ANDROID_ARCH}" --force
           echo "y" | $ANDROID_HOME/emulator/emulator -list-avds
           echo "Starting emulator"
-
-          cd ${ANDROID_HOME}/emulator/qemu/darwin-aarch64/
-          entitlements='<?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-              <key>com.apple.security.hypervisor</key>
-              <true/>
-          </dict>
-          </plist>'
-          echo "$entitlements" > entitlements.xml
-          codesign -s - --entitlements entitlements.xml --force qemu-system-aarch64-headless
-          cd -
 
           # Start emulator in background
           nohup $ANDROID_HOME/emulator/emulator -avd test -no-snapshot -no-window -no-audio -no-boot-anim -no-accel -no-metrics &
