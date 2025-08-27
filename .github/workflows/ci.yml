@@ -35,60 +35,48 @@ jobs:
       ANDROID_API: ${{ matrix.ANDROID_API }}
       ANDROID_ARCH: ${{ matrix.ANDROID_ARCH }}
     steps:
-      - name: Checkout tools repo
-        uses: actions/checkout@v5
-        with:
-          repository: amrsa1/Android-Emulator-image
-          path: Android-Emulator-image
-      - name: Install Docker
-        if: ${{ startsWith(matrix.os, 'macos-') }}
-        run: brew install docker
-      - name: "Launch emulator (Docker)"
-        timeout-minutes: 20
-        working-directory: Android-Emulator-image
+      - name: "Launch emulator"
+        timeout-minutes: 10
         run: |
-          docker build \
-            --build-arg ARCH=x86_64  \
-            --build-arg TARGET=google_apis_playstore\
-            --build-arg API_LEVEL=31 \
-            --build-arg BUILD_TOOLS=31.0.0 \
-            --build-arg EMULATOR_DEVICE="Nexus 6" \
-            --build-arg EMULATOR_NAME=nexus \
-            -t my-android-image .  
-          docker exec --privileged -it -e EMULATOR_TIMEOUT=300 my-android-image bash -c "./start_emu_headless.sh"
-          adb shell 'echo Hello World'
+          # Install AVD files
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-${ANDROID_API};default;${ANDROID_ARCH}"
+          # Create emulator
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager create avd -f -n test -d "Nexus 10" -k "system-images;android-${ANDROID_API};default;${ANDROID_ARCH}" --force
+          echo "y" | $ANDROID_HOME/emulator/emulator -list-avds
+          echo "Starting emulator"
+      
+          # Start emulator in background
+          nohup $ANDROID_HOME/emulator/emulator -avd test -no-snapshot -no-window -no-audio -no-boot-anim -no-accel -no-metrics &
+          # Fixed quoting around "\r"
+          $ANDROID_HOME/platform-tools/adb wait-for-device shell 'while [[ -z $(getprop sys.boot_completed | tr -d "\r") ]]; do sleep 1; done; input keyevent 82'
+          $ANDROID_HOME/platform-tools/adb devices
+          echo "Emulator started"
+      
+      - name: "Check Emulator"
+        run: |
+          $ANDROID_HOME/platform-tools/adb shell 'echo Hello Android!'
+      
+      - name: "Install Skip (macOS)"
+        if: ${{ startsWith(matrix.os, 'macos-') }}
+        run: |
+          brew install skiptools/skip/skip
+          skip android sdk install
 
-      #- name: "Launch emulator"
-      #  timeout-minutes: 10
-      #  run: |
-      #    # Install AVD files
-      #    echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-${ANDROID_API};default;${ANDROID_ARCH}"
-      #    # Create emulator
-      #    echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager create avd -f -n test -d "Nexus 10" -k "system-images;android-${ANDROID_API};default;${ANDROID_ARCH}" --force
-      #    echo "y" | $ANDROID_HOME/emulator/emulator -list-avds
-      #    echo "Starting emulator"
-      #
-      #    # Start emulator in background
-      #    nohup $ANDROID_HOME/emulator/emulator -avd test -no-snapshot -no-window -no-audio -no-boot-anim -no-accel -no-metrics &
-      #    # Fixed quoting around "\r"
-      #    $ANDROID_HOME/platform-tools/adb wait-for-device shell 'while [[ -z $(getprop sys.boot_completed | tr -d "\r") ]]; do sleep 1; done; input keyevent 82'
-      #    $ANDROID_HOME/platform-tools/adb devices
-      #    echo "Emulator started"
-      #
-      #- name: "Check Emulator"
-      #  run: |
-      #    $ANDROID_HOME/platform-tools/adb shell 'echo Hello Android!'
-      #
-      #- name: "Install Skip"
-      #  run: |
-      #    brew install skiptools/skip/skip
-      #    skip android sdk install
-      #
-      #- name: "Test Swift Package"
-      #  run: |
-      #    mkdir PackageDemo
-      #    cd PackageDemo
-      #    swift package init
-      #    swift test
-      #    skip android test
+      - name: Install Skip (Ubuntu)
+        if: ${{ startsWith(matrix.os, 'ubuntu-') }}
+        run: |
+          mkdir -p ~/bin/skiptools
+          cd ~/bin/skiptools
+          curl -fsSLO https://github.com/skiptools/skip/releases/latest/download/skip-linux.zip
+          unzip skip-linux.zip
+          echo "PATH=${PWD}/skip.artifactbundle/$(uname -m)-swift-linux-musl:${PATH}" >> $GITHUB_ENV
+          cd -
+
+      - name: "Test Swift Package"
+        run: |
+          mkdir PackageDemo
+          cd PackageDemo
+          swift package init
+          swift test
+          skip android test
 
