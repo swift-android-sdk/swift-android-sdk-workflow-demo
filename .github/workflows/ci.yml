@@ -40,6 +40,9 @@ jobs:
         with:
           repository: amrsa1/Android-Emulator-image
           path: Android-Emulator-image
+      - name: Install Docker
+        if: ${{ startsWith(matrix.os, 'macos-') }}
+        run: brew install docker
       - name: "Launch emulator (Docker)"
         timeout-minutes: 20
         working-directory: Android-Emulator-image
@@ -52,7 +55,7 @@ jobs:
             --build-arg EMULATOR_DEVICE="Nexus 6" \
             --build-arg EMULATOR_NAME=nexus \
             -t my-android-image .  
-          docker exec --privileged -it -e EMULATOR_TIMEOUT=300 androidContainer bash -c "./start_emu_headless.sh"
+          docker exec --privileged -it -e EMULATOR_TIMEOUT=300 my-android-image bash -c "./start_emu_headless.sh"
           adb shell 'echo Hello World'
 
       #- name: "Launch emulator"
