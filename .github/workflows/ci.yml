@@ -31,6 +31,26 @@ jobs:
       ANDROID_API: ${{ matrix.ANDROID_API }}
       ANDROID_ARCH: ${{ matrix.ANDROID_ARCH }}
     steps:
+      - name: Checkout tools repo
+        uses: actions/checkout@v5
+        with:
+          repository: amrsa1/Android-Emulator-image
+          path: Android-Emulator-image
+      - name: "Launch emulator (Docker)"
+        timeout-minutes: 20
+        working-directory: Android-Emulator-image
+        run: |
+          docker build \
+            --build-arg ARCH=x86_64  \
+            --build-arg TARGET=google_apis_playstore\
+            --build-arg API_LEVEL=31 \
+            --build-arg BUILD_TOOLS=31.0.0 \
+            --build-arg EMULATOR_DEVICE="Nexus 6" \
+            --build-arg EMULATOR_NAME=nexus \
+            -t my-android-image .  
+          docker exec --privileged -it -e EMULATOR_TIMEOUT=300 androidContainer bash -c "./start_emu_headless.sh"
+          adb shell 'echo Hello World'
+
       - name: "Launch emulator"
         timeout-minutes: 10
         run: |
