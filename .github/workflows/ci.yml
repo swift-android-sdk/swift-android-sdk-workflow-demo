@@ -9,35 +9,49 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: 'macOS 13'
-            os: 'macos-13'
-            ANDROID_API: 28
-            ANDROID_ARCH: 'x86_64'
-          - name: 'macOS 14'
-            os: 'macos-14'
+          - name: 'macOS 26'
+            os: 'macos-26'
             ANDROID_API: 28
             ANDROID_ARCH: 'arm64-v8a'
+            ANDROID_GPU: 'swiftshader_indirect'
           - name: 'macOS 15'
             os: 'macos-15'
             ANDROID_API: 28
             ANDROID_ARCH: 'arm64-v8a'
-          #- name: 'macOS 26'
-          #  os: 'macos-26'
-          #  ANDROID_API: 28
-          #  ANDROID_ARCH: 'arm64-v8a'
+            ANDROID_GPU: 'swiftshader_indirect'
+          - name: 'macOS 14'
+            os: 'macos-14'
+            ANDROID_API: 28
+            ANDROID_ARCH: 'arm64-v8a'
+            ANDROID_GPU: 'swiftshader_indirect'
+          - name: 'macOS 13'
+            os: 'macos-13'
+            ANDROID_API: 28
+            ANDROID_ARCH: 'x86_64'
+            ANDROID_GPU: 'swiftshader_indirect'
           - name: 'Ubuntu Latest'
             os: 'ubuntu-latest'
             ANDROID_API: 28
             ANDROID_ARCH: 'x86_64'
+            ANDROID_GPU: 'none'
       fail-fast: false
     runs-on: ${{ matrix.os }}
     env:
       ANDROID_API: ${{ matrix.ANDROID_API }}
       ANDROID_ARCH: ${{ matrix.ANDROID_ARCH }}
+      ANDROID_GPU: ${{ matrix.ANDROID_GPU }}
+      #ANDROID_BUILD_TOOLS_VERSION: 36.0.0
+      ANDROID_BUILD_TOOLS_VERSION: 'latest'
     steps:
+      - name: "Setup Environment"
+        run: |
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/emulator:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/${{ env.ANDROID_BUILD_TOOLS_VERSION }}" >> $GITHUB_PATH
+
       - name: "Launch emulator"
         timeout-minutes: 10
         run: |
+          yes Y | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+
           # Install AVD files
           echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-${ANDROID_API};default;${ANDROID_ARCH}"
           # Create emulator
@@ -46,7 +60,7 @@ jobs:
           echo "Starting emulator"
       
           # Start emulator in background
-          nohup $ANDROID_HOME/emulator/emulator -avd test -no-snapshot -no-window -no-audio -no-boot-anim -no-accel -no-metrics &
+          nohup $ANDROID_HOME/emulator/emulator -avd test -no-snapshot -no-window -no-audio -no-boot-anim -no-accel -no-metrics -camera-back none -accel off -gpu ${ANDROID_GPU} &
           # Fixed quoting around "\r"
           $ANDROID_HOME/platform-tools/adb wait-for-device shell 'while [[ -z $(getprop sys.boot_completed | tr -d "\r") ]]; do sleep 1; done; input keyevent 82'
           $ANDROID_HOME/platform-tools/adb devices
