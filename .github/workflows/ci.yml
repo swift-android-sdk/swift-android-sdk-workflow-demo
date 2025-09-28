@@ -45,6 +45,8 @@ jobs:
       ANDROID_BUILD_TOOLS_VERSION: 'latest'
       ANDROID_EMULATOR_NAME: 'test'
     steps:
+      - uses: skiptools/actions/setup-skip@skip-action
+
       - name: "Setup Environment"
         run: |
           echo "$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/emulator:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/${{ env.ANDROID_BUILD_TOOLS_VERSION }}" >> $GITHUB_PATH
@@ -72,8 +74,6 @@ jobs:
       - name: "Check Emulator"
         run: |
           $ANDROID_HOME/platform-tools/adb shell 'echo Hello Android!'
-      
-      - uses: skiptools/actions/setup-skip@skip-action
 
       - name: "Test Swift Package"
         run: |
