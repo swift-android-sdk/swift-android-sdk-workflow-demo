@@ -54,13 +54,14 @@ jobs:
       - name: "Launch emulator"
         timeout-minutes: 10
         run: |
-          yes Y | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+          yes Y | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses 2>&1 >> /dev/null
 
           # Install AVD files
-          yes Y | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-${ANDROID_API};${ANDROID_TARGET};${ANDROID_ARCH}"
-          yes Y | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --channel=3 emulator
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-${ANDROID_API};${ANDROID_TARGET};${ANDROID_ARCH}"
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --channel=3 emulator
           # Create emulator
-          echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager create avd -f -n test -d "Nexus 10" --abi "${ANDROID_TARGET}/${ANDROID_ARCH}" -k "system-images;android-${ANDROID_API};${ANDROID_TARGET};${ANDROID_ARCH}" --force
+          $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager create avd -f -n test -d "Nexus 10" --abi "${ANDROID_TARGET}/${ANDROID_ARCH}" -k "system-images;android-${ANDROID_API};${ANDROID_TARGET};${ANDROID_ARCH}" --force
+
           $ANDROID_HOME/emulator/emulator -list-avds
           echo "Starting emulator"
       
