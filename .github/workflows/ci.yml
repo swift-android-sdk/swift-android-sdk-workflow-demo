@@ -91,7 +91,7 @@ jobs:
         run: emulator -list-avds
 
       - name: Emulator - Boot
-        run: emulator -memory 4096 -avd "${ANDROID_EMULATOR_NAME}" -wipe-data -no-window -accel off -no-snapshot -noaudio -no-boot-anim &
+        run: emulator -memory 4096 -avd "${ANDROID_EMULATOR_NAME}" -wipe-data -no-window -accel off -no-accel -gpu off -engine classic -no-snapshot -noaudio -no-boot-anim &
 
       - name: ADB Wait For Device
         run: adb wait-for-any-device
