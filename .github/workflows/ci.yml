@@ -33,7 +33,17 @@ jobs:
             os: 'ubuntu-latest'
             ANDROID_API: 28
             ANDROID_ARCH: 'x86_64'
-            ANDROID_GPU: 'none'
+            ANDROID_GPU: 'off'
+          - name: 'Ubuntu Latest'
+            os: 'ubuntu-latest'
+            ANDROID_API: 28
+            ANDROID_ARCH: 'x86_64'
+            ANDROID_GPU: 'swiftshader_indirect'
+          - name: 'Ubuntu Latest'
+            os: 'ubuntu-latest'
+            ANDROID_API: 28
+            ANDROID_ARCH: 'x86_64'
+            ANDROID_GPU: 'swiftshader'
       fail-fast: false
     runs-on: ${{ matrix.os }}
     env:
@@ -91,7 +101,7 @@ jobs:
         run: emulator -list-avds
 
       - name: Emulator - Boot
-        run: emulator -memory 4096 -avd "${ANDROID_EMULATOR_NAME}" -wipe-data -no-window -accel off -no-accel -gpu off -engine classic -no-snapshot -noaudio -no-boot-anim &
+        run: emulator -memory 4096 -avd "${ANDROID_EMULATOR_NAME}" -wipe-data -no-window -accel off -no-accel -gpu "${ANDROID_GPU}" -engine classic -no-snapshot -noaudio -no-boot-anim &
 
       - name: ADB Wait For Device
         run: adb wait-for-any-device
