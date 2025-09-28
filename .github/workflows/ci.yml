@@ -83,6 +83,9 @@ jobs:
       - name: Emulator - Create
         run: avdmanager --verbose create avd --force -n "${ANDROID_EMULATOR_NAME}" --device "${ANDROID_PROFILE}" --abi "${ANDROID_TARGET}/${ANDROID_ARCH}" --package "system-images;android-${ANDROID_API};${ANDROID_TARGET};${ANDROID_ARCH}" --sdcard 512M
 
+      - name: Emulator - Find AVDs
+        run: find ~/ -type d -name '*.avd'
+
       - name: Emulator - List AVDs
         run: emulator -list-avds
 
