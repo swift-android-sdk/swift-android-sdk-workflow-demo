@@ -66,7 +66,7 @@ jobs:
 
           # Create emulator
           echo "Creating emulator: ${ANDROID_EMULATOR_NAME}"
-          avdmanager create avd -f -n "${ANDROID_EMULATOR_NAME}" -d "${ANDROID_PROFILE}" --abi "${ANDROID_TARGET}/${ANDROID_ARCH}" -k "system-images;android-${ANDROID_API};${ANDROID_TARGET};${ANDROID_ARCH}" --force
+          avdmanager --verbose create avd -f -n "${ANDROID_EMULATOR_NAME}" -d "${ANDROID_PROFILE}" --abi "${ANDROID_TARGET}/${ANDROID_ARCH}" -k "system-images;android-${ANDROID_API};${ANDROID_TARGET};${ANDROID_ARCH}" --force
 
           echo "Listing emulators"
 
@@ -94,7 +94,7 @@ jobs:
         run: sdkmanager --install "system-images;android-${ANDROID_API};${ANDROID_TARGET};${ANDROID_ARCH}" --channel="${ANDROID_CHANNEL}"
 
       - name: Emulator - Create
-        run: echo no | avdmanager create avd --force -n "${ANDROID_EMULATOR_NAME}" --device "${ANDROID_PROFILE}" --abi "${ANDROID_TARGET}/${ANDROID_ARCH}" --package "system-images;android-${ANDROID_API};${ANDROID_TARGET};${ANDROID_ARCH}" --sdcard 512M
+        run: echo no | avdmanager --verbose create avd --force -n "${ANDROID_EMULATOR_NAME}" --device "${ANDROID_PROFILE}" --abi "${ANDROID_TARGET}/${ANDROID_ARCH}" --package "system-images;android-${ANDROID_API};${ANDROID_TARGET};${ANDROID_ARCH}" --sdcard 512M
 
       - name: Emulator - List AVDs
         run: emulator -list-avds
