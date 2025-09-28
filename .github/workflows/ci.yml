@@ -9,11 +9,11 @@ jobs:
     strategy:
       matrix:
         include:
-          #- name: 'macOS 26'
-          #  os: 'macos-26'
-          #  ANDROID_API: 28
-          #  ANDROID_ARCH: 'arm64-v8a'
-          #  ANDROID_GPU: 'swiftshader_indirect'
+          - name: 'macOS 26'
+            os: 'macos-26'
+            ANDROID_API: 28
+            ANDROID_ARCH: 'arm64-v8a'
+            ANDROID_GPU: 'swiftshader_indirect'
           #- name: 'macOS 15'
           #  os: 'macos-15'
           #  ANDROID_API: 28
@@ -24,11 +24,11 @@ jobs:
           #  ANDROID_API: 28
           #  ANDROID_ARCH: 'arm64-v8a'
           #  ANDROID_GPU: 'swiftshader_indirect'
-          #- name: 'macOS 13'
-          #  os: 'macos-13'
-          #  ANDROID_API: 28
-          #  ANDROID_ARCH: 'x86_64'
-          #  ANDROID_GPU: 'swiftshader_indirect'
+          - name: 'macOS 13'
+            os: 'macos-13'
+            ANDROID_API: 28
+            ANDROID_ARCH: 'x86_64'
+            ANDROID_GPU: 'swiftshader_indirect'
           - name: 'Ubuntu Latest'
             os: 'ubuntu-latest'
             ANDROID_API: 28
@@ -79,16 +79,19 @@ jobs:
           echo "Emulator started"
 
       - name: SKDs - download required images
-        run: sdkmanager "system-images;android-30;default;x86_64"
+        run: sdkmanager "system-images;android-${ANDROID_API};default;x86_64"
 
       - name: SDKs - accept licenses
-        run: y | sdkmanager --licenses
+        run: yes Y | sdkmanager --licenses
 
       - name: Emulator - Create
-        run: echo no | avdmanager create avd -n Pixel_API_30 --device 'Nexus 5X' --package "system-images;android-30;default;x86_64" --sdcard 512M
+        run: echo no | avdmanager create avd -n "${ANDROID_EMULATOR_NAME}" --device 'Nexus 5X' --package "system-images;android-${ANDROID_API};default;x86_64" --sdcard 512M
+
+      - name: Emulator - List AVDs
+        run: emulator -list-avds
 
       - name: Emulator - Boot
-        run: emulator -memory 4096 -avd Pixel_API_30 -wipe-data -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim &
+        run: emulator -memory 4096 -avd "${ANDROID_EMULATOR_NAME}" -wipe-data -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim &
 
       - name: ADB Wait For Device
         run: adb wait-for-any-device
