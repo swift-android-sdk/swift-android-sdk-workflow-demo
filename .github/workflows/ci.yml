@@ -73,7 +73,7 @@ jobs:
       ANDROID_CHANNEL: "3"
       BUILD_TOOLS_VERSION: "35.0.0"
     steps:
-      - uses: skiptools/actions/setup-skip@skip-action
+      - uses: skiptools/actions/setup-skip@v1
 
       - uses: nttld/setup-ndk@v1
         id: setup-ndk
@@ -90,7 +90,7 @@ jobs:
             echo "ANDROID_AVD_HOME=${XDG_CONFIG_HOME}/.android/avd" >> $GITHUB_ENV
           fi
 
-      - uses: skiptools/swift-android-action@main
+      - uses: skiptools/swift-android-action@v2
         with:
           build-package: false
 
