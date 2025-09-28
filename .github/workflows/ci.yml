@@ -52,8 +52,6 @@ jobs:
       - name: "Launch emulator"
         timeout-minutes: 10
         run: |
-          which adb
-
           yes Y | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
 
           # Install AVD files
@@ -75,21 +73,7 @@ jobs:
         run: |
           $ANDROID_HOME/platform-tools/adb shell 'echo Hello Android!'
       
-      - name: "Install Skip (macOS)"
-        if: ${{ startsWith(matrix.os, 'macos-') }}
-        run: |
-          brew install skiptools/skip/skip
-          skip android sdk install
-
-      - name: Install Skip (Ubuntu)
-        if: ${{ startsWith(matrix.os, 'ubuntu-') }}
-        run: |
-          mkdir -p ~/bin/skiptools
-          cd ~/bin/skiptools
-          curl -fsSLO https://github.com/skiptools/skip/releases/latest/download/skip-linux.zip
-          unzip skip-linux.zip
-          echo "PATH=${PWD}/skip.artifactbundle/$(uname -m)-swift-linux-musl:${PATH}" >> $GITHUB_ENV
-          cd -
+      - uses: skiptools/actions/setup-skip@setup-skip
 
       - name: "Test Swift Package"
         run: |
