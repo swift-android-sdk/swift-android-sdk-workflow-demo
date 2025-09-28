@@ -88,7 +88,7 @@ jobs:
         run: yes no | sdkmanager --channel=3 emulator
 
       - name: Emulator - Create
-        run: echo no | avdmanager create avd --force -n "${ANDROID_EMULATOR_NAME}" --device 'Nexus 5X' --abi "${ANDROID_API}/${ANDROID_ARCH}" --package "system-images;android-${ANDROID_API};${ANDROID_TARGET};${ANDROID_ARCH}" --sdcard 512M
+        run: echo no | avdmanager create avd --force -n "${ANDROID_EMULATOR_NAME}" --abi "${ANDROID_TARGET}/${ANDROID_ARCH}" --package "system-images;android-${ANDROID_API};${ANDROID_TARGET};${ANDROID_ARCH}" --sdcard 512M
 
       - name: Emulator - List AVDs
         run: emulator -list-avds
