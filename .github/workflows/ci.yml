@@ -61,7 +61,7 @@ jobs:
           echo "ANDROID_NDK_HOME=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV
           # needed for Linux
           if [[ "${RUNNER_OS}" == "Linux" ]]; then
-            echo "ANDROID_AVD_HOME=${HOME}/.android/avd" >> $GITHUB_ENV
+            echo "ANDROID_AVD_HOME=${XDG_CONFIG_HOME}/.android/avd" >> $GITHUB_ENV
           fi
 
       - uses: skiptools/swift-android-action@v2
