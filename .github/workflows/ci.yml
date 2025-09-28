@@ -78,14 +78,14 @@ jobs:
           adb devices
           echo "Emulator started"
 
-      - name: SKDs - download required images
-        run: sdkmanager "system-images;android-${ANDROID_API};default;x86_64"
-
       - name: SDKs - accept licenses
         run: yes Y | sdkmanager --licenses
 
+      - name: SKDs - download required images
+        run: yes no | sdkmanager "system-images;android-${ANDROID_API};default;x86_64"
+
       - name: Emulator - Create
-        run: echo no | avdmanager create avd -n "${ANDROID_EMULATOR_NAME}" --device 'Nexus 5X' --package "system-images;android-${ANDROID_API};default;x86_64" --sdcard 512M
+        run: yes no | avdmanager create avd -n "${ANDROID_EMULATOR_NAME}" --device 'Nexus 5X' --package "system-images;android-${ANDROID_API};default;x86_64" --sdcard 512M
 
       - name: Emulator - List AVDs
         run: emulator -list-avds
