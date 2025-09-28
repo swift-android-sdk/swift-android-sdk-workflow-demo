@@ -49,6 +49,9 @@ jobs:
       BUILD_TOOLS_VERSION: "35.0.0"
     steps:
       - uses: skiptools/actions/setup-skip@skip-action
+      - uses: skiptools/swift-android-action@v2
+        with:
+          build-package: false
 
       - name: "Setup Environment"
         run: |
@@ -100,7 +103,7 @@ jobs:
         run: emulator -list-avds
 
       - name: Emulator - Boot
-        run: emulator -memory 4096 -avd "${ANDROID_EMULATOR_NAME}" -wipe-data -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim &
+        run: emulator -memory 4096 -avd "${ANDROID_EMULATOR_NAME}" -wipe-data -no-window -gpu "${ANDROID_GPU}" -no-snapshot -noaudio -no-boot-anim &
 
       - name: ADB Wait For Device
         run: adb wait-for-any-device
