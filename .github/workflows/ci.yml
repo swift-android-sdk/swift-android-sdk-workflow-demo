@@ -14,6 +14,16 @@ jobs:
             ANDROID_API: 28
             ANDROID_ARCH: 'arm64-v8a'
             ANDROID_GPU: 'swiftshader_indirect'
+          - name: 'macOS 26'
+            os: 'macos-26'
+            ANDROID_API: 28
+            ANDROID_ARCH: 'arm64-v8a'
+            ANDROID_GPU: 'swiftshader'
+          - name: 'macOS 26'
+            os: 'macos-26'
+            ANDROID_API: 28
+            ANDROID_ARCH: 'arm64-v8a'
+            ANDROID_GPU: 'off'
           #- name: 'macOS 15'
           #  os: 'macos-15'
           #  ANDROID_API: 28
