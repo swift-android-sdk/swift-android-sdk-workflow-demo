@@ -13,21 +13,7 @@ jobs:
             os: 'macos-26'
             ANDROID_API: 28
             EMULATOR_ARCH: 'arm64-v8a'
-            #EMULATOR_ARCH: 'armv7'
             EMULATOR_GPU: 'swiftshader_indirect'
-            EMULATOR_ENGINE: 'classic'
-          - name: 'macOS 26'
-            os: 'macos-26'
-            ANDROID_API: 28
-            EMULATOR_ARCH: 'arm64-v8a'
-            EMULATOR_GPU: 'swiftshader'
-            EMULATOR_ENGINE: 'classic'
-          - name: 'macOS 26'
-            os: 'macos-26'
-            ANDROID_API: 28
-            EMULATOR_ARCH: 'arm64-v8a'
-            EMULATOR_GPU: 'off'
-            EMULATOR_ENGINE: 'classic'
           #- name: 'macOS 15'
           #  os: 'macos-15'
           #  ANDROID_API: 28
@@ -47,17 +33,7 @@ jobs:
             os: 'ubuntu-latest'
             ANDROID_API: 28
             EMULATOR_ARCH: 'x86_64'
-            EMULATOR_GPU: 'off'
-          - name: 'Ubuntu Latest'
-            os: 'ubuntu-latest'
-            ANDROID_API: 28
-            EMULATOR_ARCH: 'x86_64'
             EMULATOR_GPU: 'swiftshader_indirect'
-          - name: 'Ubuntu Latest'
-            os: 'ubuntu-latest'
-            ANDROID_API: 28
-            EMULATOR_ARCH: 'x86_64'
-            EMULATOR_GPU: 'swiftshader'
       fail-fast: false
     runs-on: ${{ matrix.os }}
     env:
@@ -116,7 +92,7 @@ jobs:
         run: emulator -list-avds
 
       - name: Emulator - Boot
-        run: emulator -memory 4096 -avd "${ANDROID_EMULATOR_NAME}" -wipe-data -no-window -accel off -no-accel -gpu "${EMULATOR_GPU}" -engine "${EMULATOR_ENGINE}" -no-snapshot -noaudio -no-boot-anim &
+        run: emulator -memory 4096 -avd "${ANDROID_EMULATOR_NAME}" -wipe-data -no-window -accel off -no-accel -gpu "${EMULATOR_GPU}" -no-snapshot -noaudio -no-boot-anim &
 
       - name: ADB Wait For Device
         run: adb wait-for-any-device
