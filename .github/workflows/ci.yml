@@ -49,17 +49,24 @@ jobs:
       BUILD_TOOLS_VERSION: "35.0.0"
     steps:
       - uses: skiptools/actions/setup-skip@skip-action
-      - uses: skiptools/swift-android-action@v2
+
+      - uses: nttld/setup-ndk@v1
+        id: setup-ndk
         with:
-          build-package: false
+          ndk-version: r27d
 
       - name: "Setup Environment"
         run: |
           echo "$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/emulator:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/${{ env.ANDROID_BUILD_TOOLS_VERSION }}" >> $GITHUB_PATH
+          echo "ANDROID_NDK_HOME=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV
           # needed for Linux
           if [[ "${RUNNER_OS}" == "Linux" ]]; then
             echo "ANDROID_AVD_HOME=${HOME}/.android/avd" >> $GITHUB_ENV
           fi
+
+      - uses: skiptools/swift-android-action@v2
+        with:
+          build-package: false
 
       - name: SDKs - accept licenses
         run: yes y | sdkmanager --licenses
@@ -68,7 +75,7 @@ jobs:
         run: sdkmanager --install "build-tools;${BUILD_TOOLS_VERSION}" platform-tools "platforms;android-${ANDROID_API}" --channel="${ANDROID_CHANNEL}"
 
       - name: SKDs - setup emulator
-        run: sdkmanager --install emulator  --channel="${ANDROID_CHANNEL}"
+        run: sdkmanager --install emulator --channel="${ANDROID_CHANNEL}"
 
       - name: SKDs - download required images
         run: sdkmanager --install "system-images;android-${ANDROID_API};${ANDROID_TARGET};${ANDROID_ARCH}" --channel="${ANDROID_CHANNEL}"
