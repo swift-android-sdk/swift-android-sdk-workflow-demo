@@ -73,7 +73,7 @@ jobs:
         run: |
           $ANDROID_HOME/platform-tools/adb shell 'echo Hello Android!'
       
-      - uses: skiptools/actions/setup-skip@setup-skip
+      - uses: skiptools/actions/setup-skip/action.yml@setup-skip
 
       - name: "Test Swift Package"
         run: |
