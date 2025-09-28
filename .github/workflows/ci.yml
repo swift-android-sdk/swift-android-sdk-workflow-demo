@@ -82,13 +82,13 @@ jobs:
         run: yes y | sdkmanager --licenses
 
       - name: SKDs - download required images
-        run: yes no | sdkmanager "system-images;android-${ANDROID_API};${ANDROID_TARGET};x86_64"
+        run: yes no | sdkmanager "system-images;android-${ANDROID_API};${ANDROID_TARGET};${ANDROID_ARCH}"
 
       - name: SKDs - setup emulator
         run: yes no | sdkmanager --channel=3 emulator
 
       - name: Emulator - Create
-        run: yes no | avdmanager create avd -n "${ANDROID_EMULATOR_NAME}" --device 'Nexus 5X' --package "system-images;android-${ANDROID_API};${ANDROID_TARGET};x86_64" --sdcard 512M
+        run: echo no | avdmanager create avd --force -n "${ANDROID_EMULATOR_NAME}" --device 'Nexus 5X' --abi "${ANDROID_API}/${ANDROID_ARCH}" --package "system-images;android-${ANDROID_API};${ANDROID_TARGET};${ANDROID_ARCH}" --sdcard 512M
 
       - name: Emulator - List AVDs
         run: emulator -list-avds
