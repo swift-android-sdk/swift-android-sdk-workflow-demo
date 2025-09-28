@@ -59,7 +59,8 @@ jobs:
         run: |
           echo "$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/emulator:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/${{ env.ANDROID_BUILD_TOOLS_VERSION }}" >> $GITHUB_PATH
           echo "ANDROID_NDK_HOME=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV
-          # needed for Linux
+          # needed for Linux or else the emulator will be created in
+          # ~/.android/avd but it will be sought in ~/.config/.android/avd
           if [[ "${RUNNER_OS}" == "Linux" ]]; then
             echo "ANDROID_AVD_HOME=${XDG_CONFIG_HOME}/.android/avd" >> $GITHUB_ENV
           fi
@@ -90,7 +91,7 @@ jobs:
         run: emulator -list-avds
 
       - name: Emulator - Boot
-        run: emulator -memory 4096 -avd "${ANDROID_EMULATOR_NAME}" -wipe-data -no-window -gpu "${ANDROID_GPU}" -no-snapshot -noaudio -no-boot-anim &
+        run: emulator -memory 4096 -avd "${ANDROID_EMULATOR_NAME}" -wipe-data -no-window -accel off -no-snapshot -noaudio -no-boot-anim &
 
       - name: ADB Wait For Device
         run: adb wait-for-any-device
