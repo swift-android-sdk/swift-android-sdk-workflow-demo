@@ -27,21 +27,69 @@ jobs:
           #  EMULATOR_ARCH: 'arm64-v8a'
           #  EMULATOR_GPU: 'swiftshader_indirect'
 
-          - name: 'macOS 15 Intel'
+          - name: 'macOS 15 Intel API 28'
             os: 'macos-15-intel'
             ANDROID_API: 28
             EMULATOR_ARCH: 'x86_64'
             EMULATOR_GPU: 'swiftshader_indirect'
 
-          - name: 'macOS 13'
+          - name: 'macOS 13 API 28'
             os: 'macos-13'
             ANDROID_API: 28
             EMULATOR_ARCH: 'x86_64'
             EMULATOR_GPU: 'swiftshader_indirect'
 
-          - name: 'Ubuntu Latest'
+          - name: 'Ubuntu Latest API 28'
             os: 'ubuntu-latest'
             ANDROID_API: 28
+            EMULATOR_ARCH: 'x86_64'
+            EMULATOR_GPU: 'swiftshader_indirect'
+
+          - name: 'Ubuntu Latest API 29'
+            os: 'ubuntu-latest'
+            ANDROID_API: 29
+            EMULATOR_ARCH: 'x86_64'
+            EMULATOR_GPU: 'swiftshader_indirect'
+
+          - name: 'Ubuntu Latest API 30'
+            os: 'ubuntu-latest'
+            ANDROID_API: 30
+            EMULATOR_ARCH: 'x86_64'
+            EMULATOR_GPU: 'swiftshader_indirect'
+
+          - name: 'Ubuntu Latest API 31'
+            os: 'ubuntu-latest'
+            ANDROID_API: 31
+            EMULATOR_ARCH: 'x86_64'
+            EMULATOR_GPU: 'swiftshader_indirect'
+
+          - name: 'Ubuntu Latest API 32'
+            os: 'ubuntu-latest'
+            ANDROID_API: 32
+            EMULATOR_ARCH: 'x86_64'
+            EMULATOR_GPU: 'swiftshader_indirect'
+
+          - name: 'Ubuntu Latest API 33'
+            os: 'ubuntu-latest'
+            ANDROID_API: 33
+            EMULATOR_ARCH: 'x86_64'
+            EMULATOR_GPU: 'swiftshader_indirect'
+
+          - name: 'Ubuntu Latest API 34'
+            os: 'ubuntu-latest'
+            ANDROID_API: 34
+            EMULATOR_ARCH: 'x86_64'
+            EMULATOR_GPU: 'swiftshader_indirect'
+
+          - name: 'Ubuntu Latest API 35'
+            os: 'ubuntu-latest'
+            ANDROID_API: 35
+            EMULATOR_ARCH: 'x86_64'
+            EMULATOR_GPU: 'swiftshader_indirect'
+
+          - name: 'Ubuntu Latest API 36'
+            os: 'ubuntu-latest'
+            ANDROID_API: 36
             EMULATOR_ARCH: 'x86_64'
             EMULATOR_GPU: 'swiftshader_indirect'
       fail-fast: false
