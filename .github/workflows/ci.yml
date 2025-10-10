@@ -87,11 +87,6 @@ jobs:
             EMULATOR_ARCH: 'x86_64'
             EMULATOR_GPU: 'swiftshader_indirect'
 
-          - name: 'Ubuntu Latest API 36'
-            os: 'ubuntu-latest'
-            ANDROID_API: 36
-            EMULATOR_ARCH: 'x86_64'
-            EMULATOR_GPU: 'swiftshader_indirect'
       fail-fast: false
     runs-on: ${{ matrix.os }}
     env:
@@ -123,6 +118,22 @@ jobs:
           if [[ "${RUNNER_OS}" == "Linux" ]]; then
             echo "ANDROID_AVD_HOME=${XDG_CONFIG_HOME}/.android/avd" >> $GITHUB_ENV
           fi
+
+      - name: Free Disk Space
+        if: runner.os == 'Linux'
+        run: |
+          sudo rm -rf /opt/hostedtoolcache
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+
+      - name: Enable KVM
+        if: runner.os == 'Linux'
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
 
       - uses: skiptools/swift-android-action@v2
         with:
