@@ -153,17 +153,21 @@ jobs:
       - name: Emulator - Create
         run: avdmanager --verbose create avd --force -n "${ANDROID_EMULATOR_NAME}" --device "${ANDROID_PROFILE}" --abi "${ANDROID_TARGET}/${EMULATOR_ARCH}" --package "system-images;android-${ANDROID_API};${ANDROID_TARGET};${EMULATOR_ARCH}" --sdcard 512M
 
-      - name: Emulator - Find AVDs
-        run: find ~/ -type d -name '*.avd'
+      #- name: Emulator - Find AVDs
+      #  run: find ~/ -type d -name '*.avd'
 
-      - name: Emulator - List AVDs
-        run: emulator -list-avds
+      #- name: Emulator - List AVDs
+      #  run: emulator -list-avds
 
       - name: Emulator - Boot
         run: nohup emulator -memory 4096 -avd "${ANDROID_EMULATOR_NAME}" -wipe-data -no-window -accel off -no-accel -gpu "${EMULATOR_GPU}" -no-snapshot -noaudio -no-boot-anim &
 
       - name: ADB Wait For Device
         run: adb wait-for-any-device
+        timeout-minutes: 5
+
+      - name: ADB Press Power Button
+        run: adb shell input keyevent 26
         timeout-minutes: 5
 
       - name: "Check Emulator"
