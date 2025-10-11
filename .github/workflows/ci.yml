@@ -169,8 +169,8 @@ jobs:
       - name: Wait briefly
         run: sleep 30
 
-      - name: ADB Press Power Button
-        run: adb shell input keyevent 82
+      #- name: ADB Press Power Button
+      #  run: adb shell input keyevent 82
 
       - name: "Check Emulator"
         run: |
