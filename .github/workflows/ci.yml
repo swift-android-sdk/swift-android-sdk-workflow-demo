@@ -182,5 +182,5 @@ jobs:
           cd PackageDemo
           swift package init
           swift test
-          skip android test --verbose --android-api-level ${ANDROID_API} --arch ${EMULATOR_ARCH}
+          skip android test --verbose --android-api-level 35 --arch ${EMULATOR_ARCH}
 
