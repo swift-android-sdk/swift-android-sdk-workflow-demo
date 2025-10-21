@@ -10,41 +10,35 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          #- name: 'macOS 26'
-          #  os: 'macos-26'
-          #  ANDROID_API: 28
-          #  EMULATOR_ARCH: 'arm64-v8a'
-          #  EMULATOR_GPU: 'swiftshader_indirect'
-
-          #- name: 'macOS 15'
+          #- name: 'macOS 15 ARM'
           #  os: 'macos-15'
           #  ANDROID_API: 28
           #  EMULATOR_ARCH: 'arm64-v8a'
           #  EMULATOR_ARCH_TRIPLE: 'aarch64'
           #  EMULATOR_GPU: 'swiftshader_indirect'
 
-          #- name: 'macOS 14'
-          #  os: 'macos-14'
-          #  ANDROID_API: 28
-          #  EMULATOR_ARCH: 'arm64-v8a'
-          #  EMULATOR_ARCH_TRIPLE: 'aarch64'
-          #  EMULATOR_GPU: 'swiftshader_indirect'
-
-          - name: 'macOS 15 API 28'
+          - name: 'macOS 15 X86 API 28'
             os: 'macos-15-intel'
             ANDROID_API: 28
             EMULATOR_ARCH: 'x86_64'
             EMULATOR_ARCH_TRIPLE: 'x86_64'
             EMULATOR_GPU: 'swiftshader_indirect'
 
-          - name: 'Ubuntu API 28'
+          - name: 'Ubuntu X86 API 28'
             os: 'ubuntu-latest'
             ANDROID_API: 28
             EMULATOR_ARCH: 'x86_64'
             EMULATOR_ARCH_TRIPLE: 'x86_64'
             EMULATOR_GPU: 'swiftshader_indirect'
 
-          - name: 'Ubuntu API 35'
+          - name: 'Ubuntu ARM API 28'
+            os: 'ubuntu-24.04-arm'
+            ANDROID_API: 28
+            EMULATOR_ARCH: 'arm64-v8a'
+            EMULATOR_ARCH_TRIPLE: 'aarch64'
+            EMULATOR_GPU: 'swiftshader_indirect'
+
+          - name: 'Ubuntu X86 API 35'
             os: 'ubuntu-latest'
             ANDROID_API: 35
             EMULATOR_ARCH: 'x86_64'
@@ -140,7 +134,7 @@ jobs:
           mkdir hello
           cd hello
           swiftly run swift package init --type executable
-          swiftly run swift build --swift-sdk x86_64-unknown-linux-android${ANDROID_API} --static-swift-stdlib
+          swiftly run swift build --swift-sdk "${ANDROID_EMULATOR_ARCH_TRIPLE}-unknown-linux-android${ANDROID_API}" --static-swift-stdlib
           file .build/debug/hello
 
       - name: Enable KVM
