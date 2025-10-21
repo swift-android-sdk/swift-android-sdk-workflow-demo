@@ -28,19 +28,19 @@ jobs:
           #  EMULATOR_ARCH: 'arm64-v8a'
           #  EMULATOR_GPU: 'swiftshader_indirect'
 
-          - name: 'macOS 15 Intel API 28'
+          - name: 'macOS 15 API 28'
             os: 'macos-15-intel'
             ANDROID_API: 28
             EMULATOR_ARCH: 'x86_64'
             EMULATOR_GPU: 'swiftshader_indirect'
 
-          - name: 'Ubuntu Latest API 28'
+          - name: 'Ubuntu API 28'
             os: 'ubuntu-latest'
             ANDROID_API: 28
             EMULATOR_ARCH: 'x86_64'
             EMULATOR_GPU: 'swiftshader_indirect'
 
-          - name: 'Ubuntu Latest API 35'
+          - name: 'Ubuntu API 35'
             os: 'ubuntu-latest'
             ANDROID_API: 35
             EMULATOR_ARCH: 'x86_64'
@@ -127,7 +127,7 @@ jobs:
 
       - name: Setup Swift SDK for Android
         run: |
-          cd ~/Library/org.swift.swiftpm || cd ${XDG_CONFIG_HOME:-$HOME}/.swiftpm || cd ~/.swiftpm
+          cd ~/Library/org.swift.swiftpm || cd ${XDG_CONFIG_HOME}/swiftpm || cd ~/.local/swiftpm || cd ~/.swiftpm
           ./swift-sdks/${SWIFT_ANDROID_SDK_VERSION}-a-android-0.1.artifactbundle/swift-android/scripts/setup-android-sdk.sh
 
       - name: Build Swift Executable for Android
