@@ -31,12 +31,13 @@ jobs:
             EMULATOR_ARCH_TRIPLE: 'x86_64'
             EMULATOR_GPU: 'swiftshader_indirect'
 
-          - name: 'Ubuntu ARM API 28'
-            os: 'ubuntu-24.04-arm'
-            ANDROID_API: 28
-            EMULATOR_ARCH: 'arm64-v8a'
-            EMULATOR_ARCH_TRIPLE: 'aarch64'
-            EMULATOR_GPU: 'swiftshader_indirect'
+          # Android SDK for Linux is only x86_64
+          #- name: 'Ubuntu ARM API 28'
+          #  os: 'ubuntu-24.04-arm'
+          #  ANDROID_API: 28
+          #  EMULATOR_ARCH: 'arm64-v8a'
+          #  EMULATOR_ARCH_TRIPLE: 'aarch64'
+          #  EMULATOR_GPU: 'swiftshader_indirect'
 
           # Cannot test on ARM macOS because Android emulator required nested
           # virtualization
