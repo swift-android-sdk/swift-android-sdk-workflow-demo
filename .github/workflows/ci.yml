@@ -7,6 +7,7 @@ on:
 jobs:
   install-sdk:
     strategy:
+      fail-fast: false
       matrix:
         include:
           #- name: 'macOS 26'
@@ -44,8 +45,6 @@ jobs:
             ANDROID_API: 35
             EMULATOR_ARCH: 'x86_64'
             EMULATOR_GPU: 'swiftshader_indirect'
-
-      fail-fast: false
     runs-on: ${{ matrix.os }}
     env:
       ANDROID_API: ${{ matrix.ANDROID_API }}
@@ -60,23 +59,23 @@ jobs:
       ANDROID_CHANNEL: "3"
       BUILD_TOOLS_VERSION: "35.0.0"
     steps:
-      - uses: nttld/setup-ndk@v1
-        id: setup-ndk
-        with:
-          ndk-version: r27d
-
-      - name: "Setup Environment"
+      - name: Free Disk Space
+        if: runner.os == 'Linux'
         run: |
-          echo "$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/emulator:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/${{ env.ANDROID_BUILD_TOOLS_VERSION }}" >> $GITHUB_PATH
-          echo "ANDROID_NDK_HOME=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV
-          # needed for Linux or else the emulator will be created in
-          # ~/.android/avd but it will be sought in ~/.config/.android/avd
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+
+      - name: Install Prerequisites
+        run: |
           if [[ "${RUNNER_OS}" == "Linux" ]]; then
-            echo "ANDROID_AVD_HOME=${XDG_CONFIG_HOME}/.android/avd" >> $GITHUB_ENV
+            # libcurl4-openssl-dev needed for host toolchain
+            sudo apt-get -y install libcurl4-openssl-dev
           fi
 
       # swiftly install instructions from https://www.swift.org/install/linux/
-      - name: "Install Swiftly"
+      - name: Install Swiftly
         run: |
           if [[ "${RUNNER_OS}" == "macOS" ]]; then
             curl -O https://download.swift.org/swiftly/darwin/swiftly.pkg && \
@@ -96,34 +95,42 @@ jobs:
           fi
           echo "${SWIFTLY_BIN_DIR}" >> "${GITHUB_PATH}"
 
-      - name: "Install Swift Host Toolchain"
+      - name: Install Swift Host Toolchain
         run: swiftly install main-snapshot-2025-10-16
 
-      - name: "Install Swift SDK for Android"
+      - name: Install Swift SDK for Android
         run: swift sdk install https://download.swift.org/development/android-sdk/swift-DEVELOPMENT-SNAPSHOT-2025-10-16-a/swift-DEVELOPMENT-SNAPSHOT-2025-10-16-a_android-0.1.artifactbundle.tar.gz --checksum 451844c232cf1fa02c52431084ed3dc27a42d103635c6fa71bae8d66adba2500
 
-      - name: "List Swift SDKs"
+      - name: List Swift SDKs
         run: swift sdk list
 
-      - name: "Setup Swift SDK for Android"
+      - name: Install Android NDK
+        uses: nttld/setup-ndk@v1
+        id: setup-ndk
+        with:
+          ndk-version: r27d
+
+      - name: Setup Android Environment
+        run: |
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/emulator:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/${{ env.ANDROID_BUILD_TOOLS_VERSION }}" >> $GITHUB_PATH
+          echo "ANDROID_NDK_HOME=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV
+          # needed for Linux or else the emulator will be created in
+          # ~/.android/avd but it will be sought in ~/.config/.android/avd
+          if [[ "${RUNNER_OS}" == "Linux" ]]; then
+            echo "ANDROID_AVD_HOME=${XDG_CONFIG_HOME}/.android/avd" >> $GITHUB_ENV
+          fi
+
+      - name: Setup Swift SDK for Android
         run: |
           cd ~/Library/org.swift.swiftpm || cd ${XDG_CONFIG_HOME:-$HOME}/.swiftpm
           ./swift-sdks/swift-DEVELOPMENT-SNAPSHOT-2025-10-16-a-android-0.1.artifactbundle/swift-android/scripts/setup-android-sdk.sh
 
-      - name: "Build Swift Executable for Android"
+      - name: Build Swift Executable for Android
         run: |
           mkdir hello
           cd hello
           swiftly run swift package init --type executable
           swiftly run swift build --swift-sdk x86_64-unknown-linux-android${ANDROID_API} --static-swift-stdlib
-
-      - name: Free Disk Space
-        if: runner.os == 'Linux'
-        run: |
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /opt/ghc
-          sudo rm -rf "/usr/local/share/boost"
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
 
       - name: Enable KVM
         if: runner.os == 'Linux'
