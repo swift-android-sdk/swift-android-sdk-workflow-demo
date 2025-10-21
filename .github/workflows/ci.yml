@@ -54,11 +54,14 @@ jobs:
       ANDROID_TARGET: 'default'
       #ANDROID_BUILD_TOOLS_VERSION: 36.0.0
       ANDROID_BUILD_TOOLS_VERSION: 'latest'
+      BUILD_TOOLS_VERSION: "35.0.0"
       ANDROID_EMULATOR_NAME: 'demo'
       ANDROID_PROFILE: "Nexus 10"
       ANDROID_CHANNEL: "3"
       ANDROID_NDK_VERSION: "r27d"
-      BUILD_TOOLS_VERSION: "35.0.0"
+      SWIFT_TOOLCHAIN_VERSION: "2025-10-16"
+      SWIFT_ANDROID_SDK_VERSION: "swift-DEVELOPMENT-SNAPSHOT-2025-10-16"
+      SWIFT_ANDROID_SDK_CHECKSUM: "451844c232cf1fa02c52431084ed3dc27a42d103635c6fa71bae8d66adba2500"
     steps:
       - name: Free Disk Space
         if: runner.os == 'Linux'
@@ -97,10 +100,10 @@ jobs:
           echo "${SWIFTLY_BIN_DIR}" >> "${GITHUB_PATH}"
 
       - name: Install Swift Host Toolchain
-        run: swiftly install --use main-snapshot-2025-10-16
+        run: swiftly install --use "main-snapshot-${SWIFT_TOOLCHAIN_VERSION}"
 
       - name: Install Swift SDK for Android
-        run: swift sdk install https://download.swift.org/development/android-sdk/swift-DEVELOPMENT-SNAPSHOT-2025-10-16-a/swift-DEVELOPMENT-SNAPSHOT-2025-10-16-a_android-0.1.artifactbundle.tar.gz --checksum 451844c232cf1fa02c52431084ed3dc27a42d103635c6fa71bae8d66adba2500
+        run: swift sdk install https://download.swift.org/development/android-sdk/${SWIFT_ANDROID_SDK_VERSION}-a/${SWIFT_ANDROID_SDK_VERSION}-a_android-0.1.artifactbundle.tar.gz --checksum ${SWIFT_ANDROID_SDK_CHECKSUM}
 
       - name: List Swift SDKs
         run: swift sdk list
@@ -125,7 +128,7 @@ jobs:
       - name: Setup Swift SDK for Android
         run: |
           cd ~/Library/org.swift.swiftpm || cd ${XDG_CONFIG_HOME:-$HOME}/.swiftpm || cd ~/.swiftpm
-          ./swift-sdks/swift-DEVELOPMENT-SNAPSHOT-2025-10-16-a-android-0.1.artifactbundle/swift-android/scripts/setup-android-sdk.sh
+          ./swift-sdks/${SWIFT_ANDROID_SDK_VERSION}-a-android-0.1.artifactbundle/swift-android/scripts/setup-android-sdk.sh
 
       - name: Build Swift Executable for Android
         run: |
