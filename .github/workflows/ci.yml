@@ -10,23 +10,23 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          #- name: 'macOS 15 ARM'
-          #  os: 'macos-15'
-          #  ANDROID_API: 28
-          #  EMULATOR_ARCH: 'arm64-v8a'
-          #  EMULATOR_ARCH_TRIPLE: 'aarch64'
-          #  EMULATOR_GPU: 'swiftshader_indirect'
-
-          - name: 'macOS 15 X86 API 28'
+          - name: 'macOS 15 X64 API 28'
             os: 'macos-15-intel'
             ANDROID_API: 28
             EMULATOR_ARCH: 'x86_64'
             EMULATOR_ARCH_TRIPLE: 'x86_64'
             EMULATOR_GPU: 'swiftshader_indirect'
 
-          - name: 'Ubuntu X86 API 28'
+          - name: 'Ubuntu X64 API 28'
             os: 'ubuntu-latest'
             ANDROID_API: 28
+            EMULATOR_ARCH: 'x86_64'
+            EMULATOR_ARCH_TRIPLE: 'x86_64'
+            EMULATOR_GPU: 'swiftshader_indirect'
+
+          - name: 'Ubuntu X64 API 35'
+            os: 'ubuntu-latest'
+            ANDROID_API: 35
             EMULATOR_ARCH: 'x86_64'
             EMULATOR_ARCH_TRIPLE: 'x86_64'
             EMULATOR_GPU: 'swiftshader_indirect'
@@ -38,12 +38,15 @@ jobs:
             EMULATOR_ARCH_TRIPLE: 'aarch64'
             EMULATOR_GPU: 'swiftshader_indirect'
 
-          - name: 'Ubuntu X86 API 35'
-            os: 'ubuntu-latest'
-            ANDROID_API: 35
-            EMULATOR_ARCH: 'x86_64'
-            EMULATOR_ARCH_TRIPLE: 'x86_64'
-            EMULATOR_GPU: 'swiftshader_indirect'
+          # Cannot test on ARM macOS because Android emulator required nested
+          # virtualization
+          #- name: 'macOS 15 ARM'
+          #  os: 'macos-15'
+          #  ANDROID_API: 28
+          #  EMULATOR_ARCH: 'arm64-v8a'
+          #  EMULATOR_ARCH_TRIPLE: 'aarch64'
+          #  EMULATOR_GPU: 'swiftshader_indirect'
+
     runs-on: ${{ matrix.os }}
     env:
       ANDROID_API: ${{ matrix.ANDROID_API }}
@@ -140,9 +143,11 @@ jobs:
       - name: Enable KVM
         if: runner.os == 'Linux'
         run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
+          if [[ "${RUNNER_ARCH}" == "X64" ]]; then
+            echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+            sudo udevadm control --reload-rules
+            sudo udevadm trigger --name-match=kvm
+          fi
 
       - name: Android SDKs - setup environment
         run: yes y | sdkmanager --licenses > /dev/null
