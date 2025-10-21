@@ -20,37 +20,42 @@ jobs:
           #  os: 'macos-15'
           #  ANDROID_API: 28
           #  EMULATOR_ARCH: 'arm64-v8a'
+          #  EMULATOR_ARCH_TRIPLE: 'aarch64'
           #  EMULATOR_GPU: 'swiftshader_indirect'
 
           #- name: 'macOS 14'
           #  os: 'macos-14'
           #  ANDROID_API: 28
           #  EMULATOR_ARCH: 'arm64-v8a'
+          #  EMULATOR_ARCH_TRIPLE: 'aarch64'
           #  EMULATOR_GPU: 'swiftshader_indirect'
 
           - name: 'macOS 15 API 28'
             os: 'macos-15-intel'
             ANDROID_API: 28
             EMULATOR_ARCH: 'x86_64'
+            EMULATOR_ARCH_TRIPLE: 'x86_64'
             EMULATOR_GPU: 'swiftshader_indirect'
 
           - name: 'Ubuntu API 28'
             os: 'ubuntu-latest'
             ANDROID_API: 28
             EMULATOR_ARCH: 'x86_64'
+            EMULATOR_ARCH_TRIPLE: 'x86_64'
             EMULATOR_GPU: 'swiftshader_indirect'
 
           - name: 'Ubuntu API 35'
             os: 'ubuntu-latest'
             ANDROID_API: 35
             EMULATOR_ARCH: 'x86_64'
+            EMULATOR_ARCH_TRIPLE: 'x86_64'
             EMULATOR_GPU: 'swiftshader_indirect'
     runs-on: ${{ matrix.os }}
     env:
       ANDROID_API: ${{ matrix.ANDROID_API }}
-      EMULATOR_ARCH: ${{ matrix.EMULATOR_ARCH }}
-      EMULATOR_GPU: ${{ matrix.EMULATOR_GPU }}
-      EMULATOR_ENGINE: ${{ matrix.EMULATOR_ENGINE }}
+      ANDROID_EMULATOR_ARCH: ${{ matrix.EMULATOR_ARCH }}
+      ANDROID_EMULATOR_ARCH_TRIPLE: ${{ matrix.EMULATOR_ARCH_TRIPLE }}
+      ANDROID_EMULATOR_GPU: ${{ matrix.EMULATOR_GPU }}
       ANDROID_TARGET: 'default'
       #ANDROID_BUILD_TOOLS_VERSION: 36.0.0
       ANDROID_BUILD_TOOLS_VERSION: 'latest'
@@ -155,10 +160,10 @@ jobs:
         run: sdkmanager --install emulator --channel="${ANDROID_CHANNEL}"
 
       - name: Android Emulator - download required images
-        run: sdkmanager --install "system-images;android-${ANDROID_API};${ANDROID_TARGET};${EMULATOR_ARCH}" --channel="${ANDROID_CHANNEL}"
+        run: sdkmanager --install "system-images;android-${ANDROID_API};${ANDROID_TARGET};${ANDROID_EMULATOR_ARCH}" --channel="${ANDROID_CHANNEL}"
 
       - name: Android Emulator - Create
-        run: avdmanager --verbose create avd --force -n "${ANDROID_EMULATOR_NAME}" --device "${ANDROID_PROFILE}" --abi "${ANDROID_TARGET}/${EMULATOR_ARCH}" --package "system-images;android-${ANDROID_API};${ANDROID_TARGET};${EMULATOR_ARCH}" --sdcard 512M
+        run: avdmanager --verbose create avd --force -n "${ANDROID_EMULATOR_NAME}" --device "${ANDROID_PROFILE}" --abi "${ANDROID_TARGET}/${ANDROID_EMULATOR_ARCH}" --package "system-images;android-${ANDROID_API};${ANDROID_TARGET};${ANDROID_EMULATOR_ARCH}" --sdcard 512M
 
       #- name: Android - Find AVDs
       #  run: find ~/ -type d -name '*.avd'
@@ -167,7 +172,7 @@ jobs:
       #  run: emulator -list-avds
 
       - name: Android - Boot
-        run: nohup emulator -memory 4096 -avd "${ANDROID_EMULATOR_NAME}" -wipe-data -no-window -accel off -no-accel -gpu "${EMULATOR_GPU}" -no-snapshot -noaudio -no-boot-anim &
+        run: nohup emulator -memory 4096 -avd "${ANDROID_EMULATOR_NAME}" -wipe-data -no-window -accel off -no-accel -gpu "${ANDROID_EMULATOR_GPU}" -no-snapshot -noaudio -no-boot-anim &
 
       - name: ADB Wait For Device
         run: adb wait-for-any-device
@@ -183,13 +188,13 @@ jobs:
         run: |
           adb shell 'echo Hello Android!'
 
-      - name: Push Swift Exeutable to Android Emulator
+      - name: Push Swift Executable to Android Emulator
         run: |
           cd hello
           adb push .build/debug/hello /data/local/tmp
-          adb push $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/*/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so /data/local/tmp/
+          adb push $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/*/sysroot/usr/lib/${ANDROID_EMULATOR_ARCH_TRIPLE}-linux-android/libc++_shared.so /data/local/tmp/
 
-      - name: Run Swift Exeutable on Android Emulator
+      - name: Run Swift Executable on Android Emulator
         run: |
           adb shell /data/local/tmp/hello
 
