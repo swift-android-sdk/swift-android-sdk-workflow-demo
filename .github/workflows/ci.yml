@@ -94,6 +94,7 @@ jobs:
             echo "Error: unsupported OS: ${RUNNER_OS}"
             exit 1
           fi
+          echo "${SWIFTLY_BIN_DIR}" >> "${GITHUB_PATH}"
 
       - name: "Install Swift Host Toolchain"
         run: swiftly install main-snapshot-2025-10-16
