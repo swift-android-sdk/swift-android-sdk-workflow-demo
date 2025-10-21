@@ -64,7 +64,7 @@ jobs:
       ANDROID_PROFILE: "Nexus 10"
       ANDROID_CHANNEL: "3"
       ANDROID_NDK_VERSION: "r27d"
-      SWIFT_TOOLCHAIN_VERSION: "2025-10-16"
+      SWIFT_TOOLCHAIN_VERSION: "swift-DEVELOPMENT-SNAPSHOT-2025-10-16"
       SWIFT_ANDROID_SDK_VERSION: "swift-DEVELOPMENT-SNAPSHOT-2025-10-16"
       SWIFT_ANDROID_SDK_CHECKSUM: "451844c232cf1fa02c52431084ed3dc27a42d103635c6fa71bae8d66adba2500"
     steps:
@@ -105,7 +105,7 @@ jobs:
           echo "${SWIFTLY_BIN_DIR}" >> "${GITHUB_PATH}"
 
       - name: Install Swift Host Toolchain
-        run: swiftly install --use "main-snapshot-${SWIFT_TOOLCHAIN_VERSION}"
+        run: swiftly install --use "${SWIFT_TOOLCHAIN_VERSION}"
 
       - name: Install Swift SDK for Android
         run: swift sdk install https://download.swift.org/development/android-sdk/${SWIFT_ANDROID_SDK_VERSION}-a/${SWIFT_ANDROID_SDK_VERSION}-a_android-0.1.artifactbundle.tar.gz --checksum ${SWIFT_ANDROID_SDK_CHECKSUM}
@@ -117,7 +117,7 @@ jobs:
         run: |
           mkdir ~/android-ndk
           cd ~/android-ndk
-          curl -fSLO https://dl.google.com/android/repository/android-ndk-${ANDROID_NDK_VERSION}-$(uname -s).zip
+          curl -fsSLO https://dl.google.com/android/repository/android-ndk-${ANDROID_NDK_VERSION}-$(uname -s).zip
           unzip -q android-ndk-${ANDROID_NDK_VERSION}-*.zip
           echo "ANDROID_NDK_HOME=${PWD}/android-ndk-${ANDROID_NDK_VERSION}" >> $GITHUB_ENV
 
@@ -151,7 +151,7 @@ jobs:
           sudo udevadm trigger --name-match=kvm
 
       - name: Android SDKs - setup environment
-        run: yes y | sdkmanager --licenses
+        run: yes y | sdkmanager --licenses > /dev/null
 
       - name: Android SKDs - setup build tools
         run: sdkmanager --install "build-tools;${BUILD_TOOLS_VERSION}" platform-tools "platforms;android-${ANDROID_API}" --channel="${ANDROID_CHANNEL}"
