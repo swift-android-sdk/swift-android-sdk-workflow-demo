@@ -95,12 +95,18 @@ jobs:
             exit 1
           fi
 
+      - name: "Install Swift Host Toolchain"
+        run: swiftly install main-snapshot-2025-10-16
+
       - name: "Install Swift SDK for Android"
         run: swift sdk install https://download.swift.org/development/android-sdk/swift-DEVELOPMENT-SNAPSHOT-2025-10-16-a/swift-DEVELOPMENT-SNAPSHOT-2025-10-16-a_android-0.1.artifactbundle.tar.gz --checksum 451844c232cf1fa02c52431084ed3dc27a42d103635c6fa71bae8d66adba2500
 
+      - name: "List Swift SDKs"
+        run: swift sdk list
+
       - name: "Setup Swift SDK for Android"
         run: |
-          cd ~/Library/org.swift.swiftpm || cd ~/.swiftpm
+          cd ~/Library/org.swift.swiftpm || cd ${XDG_CONFIG_HOME:-$HOME}/.swiftpm
           ./swift-sdks/swift-DEVELOPMENT-SNAPSHOT-2025-10-16-a-android-0.1.artifactbundle/swift-android/scripts/setup-android-sdk.sh
 
       - name: "Build Swift Executable for Android"
