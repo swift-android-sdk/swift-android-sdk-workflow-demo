@@ -122,26 +122,6 @@ jobs:
         with:
           ndk-version: r27d
 
-      - name: "Install Swift Host Toolchain"
-        run: |
-          swiftly install main-snapshot-2025-10-16
-
-      - name: "Install Swift SDK for Android"
-        run: |
-          swift sdk install https://download.swift.org/development/android-sdk/swift-DEVELOPMENT-SNAPSHOT-2025-10-16-a/swift-DEVELOPMENT-SNAPSHOT-2025-10-16-a_android-0.1.artifactbundle.tar.gz --checksum 451844c232cf1fa02c52431084ed3dc27a42d103635c6fa71bae8d66adba2500
-
-      - name: "Setup Swift SDK for Android"
-        run: |
-          cd ~/Library/org.swift.swiftpm || cd ~/.swiftpm
-          ./swift-sdks/swift-DEVELOPMENT-SNAPSHOT-2025-10-16-a-android-0.1.artifactbundle/swift-android/scripts/setup-android-sdk.sh
-
-      - name: "Build Swift Executable for Android"
-        run: |
-          mkdir AndroidExeDemo
-          cd AndroidExeDemo
-          swift package init --type executable
-          swiftly run swift build --swift-sdk x86_64-unknown-linux-android${ANDROID_API} --static-swift-stdlib
-
       - name: "Setup Environment"
         run: |
           echo "$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/emulator:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/${{ env.ANDROID_BUILD_TOOLS_VERSION }}" >> $GITHUB_PATH
@@ -152,41 +132,68 @@ jobs:
             echo "ANDROID_AVD_HOME=${XDG_CONFIG_HOME}/.android/avd" >> $GITHUB_ENV
           fi
 
-      - name: SDKs - accept licenses
+      - name: "Install Swiftly"
+        run: curl -L https://swiftlang.github.io/swiftly/swiftly-install.sh | bash -s -- -y
+
+      - name: "Install Swift SDK for Android"
+        run: swift sdk install https://download.swift.org/development/android-sdk/swift-DEVELOPMENT-SNAPSHOT-2025-10-16-a/swift-DEVELOPMENT-SNAPSHOT-2025-10-16-a_android-0.1.artifactbundle.tar.gz --checksum 451844c232cf1fa02c52431084ed3dc27a42d103635c6fa71bae8d66adba2500
+
+      - name: "Setup Swift SDK for Android"
+        run: |
+          cd ~/Library/org.swift.swiftpm || cd ~/.swiftpm
+          ./swift-sdks/swift-DEVELOPMENT-SNAPSHOT-2025-10-16-a-android-0.1.artifactbundle/swift-android/scripts/setup-android-sdk.sh
+
+      - name: "Build Swift Executable for Android"
+        run: |
+          mkdir hello
+          cd hello
+          swiftly run swift package init --type executable
+          swiftly run swift build --swift-sdk x86_64-unknown-linux-android${ANDROID_API} --static-swift-stdlib
+
+      - name: Android SDKs - setup environment
         run: yes y | sdkmanager --licenses
 
-      - name: SKDs - setup build tools
+      - name: Android SKDs - setup build tools
         run: sdkmanager --install "build-tools;${BUILD_TOOLS_VERSION}" platform-tools "platforms;android-${ANDROID_API}" --channel="${ANDROID_CHANNEL}"
 
-      - name: SKDs - setup emulator
+      - name: Android SKDs - setup emulator
         run: sdkmanager --install emulator --channel="${ANDROID_CHANNEL}"
 
-      - name: SKDs - download required images
+      - name: Android Emulator - download required images
         run: sdkmanager --install "system-images;android-${ANDROID_API};${ANDROID_TARGET};${EMULATOR_ARCH}" --channel="${ANDROID_CHANNEL}"
 
-      - name: Emulator - Create
+      - name: Android Emulator - Create
         run: avdmanager --verbose create avd --force -n "${ANDROID_EMULATOR_NAME}" --device "${ANDROID_PROFILE}" --abi "${ANDROID_TARGET}/${EMULATOR_ARCH}" --package "system-images;android-${ANDROID_API};${ANDROID_TARGET};${EMULATOR_ARCH}" --sdcard 512M
 
-      #- name: Emulator - Find AVDs
+      #- name: Android - Find AVDs
       #  run: find ~/ -type d -name '*.avd'
 
-      #- name: Emulator - List AVDs
+      #- name: Android - List AVDs
       #  run: emulator -list-avds
 
-      - name: Emulator - Boot
+      - name: Android - Boot
         run: nohup emulator -memory 4096 -avd "${ANDROID_EMULATOR_NAME}" -wipe-data -no-window -accel off -no-accel -gpu "${EMULATOR_GPU}" -no-snapshot -noaudio -no-boot-anim &
 
       - name: ADB Wait For Device
         run: adb wait-for-any-device
         timeout-minutes: 5
 
-      - name: Wait briefly
+      - name: Pause briefly
         run: sleep 30
 
       #- name: ADB Press Power Button
       #  run: adb shell input keyevent 82
 
-      - name: "Check Emulator"
+      - name: Check Android Emulator
         run: |
           adb shell 'echo Hello Android!'
+
+      - name: Push Swift Exeutable to Android Emulator
+        run: |
+          adb push .debug/hello /data/local/tmp
+          adb push $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/*/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so /data/local/tmp/
+
+      - name: Run Swift Exeutable on Android Emulator
+        run: |
+          adb shell /data/local/tmp/hello
 
