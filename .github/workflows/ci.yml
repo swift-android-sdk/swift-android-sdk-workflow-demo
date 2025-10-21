@@ -33,51 +33,9 @@ jobs:
             EMULATOR_ARCH: 'x86_64'
             EMULATOR_GPU: 'swiftshader_indirect'
 
-          - name: 'macOS 13 API 28'
-            os: 'macos-13'
-            ANDROID_API: 28
-            EMULATOR_ARCH: 'x86_64'
-            EMULATOR_GPU: 'swiftshader_indirect'
-
           - name: 'Ubuntu Latest API 28'
             os: 'ubuntu-latest'
             ANDROID_API: 28
-            EMULATOR_ARCH: 'x86_64'
-            EMULATOR_GPU: 'swiftshader_indirect'
-
-          - name: 'Ubuntu Latest API 29'
-            os: 'ubuntu-latest'
-            ANDROID_API: 29
-            EMULATOR_ARCH: 'x86_64'
-            EMULATOR_GPU: 'swiftshader_indirect'
-
-          - name: 'Ubuntu Latest API 30'
-            os: 'ubuntu-latest'
-            ANDROID_API: 30
-            EMULATOR_ARCH: 'x86_64'
-            EMULATOR_GPU: 'swiftshader_indirect'
-
-          - name: 'Ubuntu Latest API 31'
-            os: 'ubuntu-latest'
-            ANDROID_API: 31
-            EMULATOR_ARCH: 'x86_64'
-            EMULATOR_GPU: 'swiftshader_indirect'
-
-          - name: 'Ubuntu Latest API 32'
-            os: 'ubuntu-latest'
-            ANDROID_API: 32
-            EMULATOR_ARCH: 'x86_64'
-            EMULATOR_GPU: 'swiftshader_indirect'
-
-          - name: 'Ubuntu Latest API 33'
-            os: 'ubuntu-latest'
-            ANDROID_API: 33
-            EMULATOR_ARCH: 'x86_64'
-            EMULATOR_GPU: 'swiftshader_indirect'
-
-          - name: 'Ubuntu Latest API 34'
-            os: 'ubuntu-latest'
-            ANDROID_API: 34
             EMULATOR_ARCH: 'x86_64'
             EMULATOR_GPU: 'swiftshader_indirect'
 
@@ -102,21 +60,6 @@ jobs:
       ANDROID_CHANNEL: "3"
       BUILD_TOOLS_VERSION: "35.0.0"
     steps:
-      - name: Free Disk Space
-        if: runner.os == 'Linux'
-        run: |
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /opt/ghc
-          sudo rm -rf "/usr/local/share/boost"
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-
-      - name: Enable KVM
-        if: runner.os == 'Linux'
-        run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
-
       - uses: nttld/setup-ndk@v1
         id: setup-ndk
         with:
@@ -132,8 +75,25 @@ jobs:
             echo "ANDROID_AVD_HOME=${XDG_CONFIG_HOME}/.android/avd" >> $GITHUB_ENV
           fi
 
+      # swiftly install instructions from https://www.swift.org/install/linux/
       - name: "Install Swiftly"
-        run: curl -L https://swiftlang.github.io/swiftly/swiftly-install.sh | bash -s -- -y
+        run: |
+          if [[ "${RUNNER_OS}" == "macOS" ]]; then
+            curl -O https://download.swift.org/swiftly/darwin/swiftly.pkg && \
+            installer -pkg swiftly.pkg -target CurrentUserHomeDirectory && \
+            ~/.swiftly/bin/swiftly init --quiet-shell-followup && \
+            . "${SWIFTLY_HOME_DIR:-$HOME/.swiftly}/env.sh" && \
+            hash -r
+          elif [[ "${RUNNER_OS}" == "Linux" ]]; then
+            curl -O https://download.swift.org/swiftly/linux/swiftly-$(uname -m).tar.gz && \
+            tar zxf swiftly-$(uname -m).tar.gz && \
+            ./swiftly init --quiet-shell-followup && \
+            . "${SWIFTLY_HOME_DIR:-$HOME/.local/share/swiftly}/env.sh" && \
+            hash -r
+          else
+            echo "Error: unsupported OS: ${RUNNER_OS}"
+            exit 1
+          fi
 
       - name: "Install Swift SDK for Android"
         run: swift sdk install https://download.swift.org/development/android-sdk/swift-DEVELOPMENT-SNAPSHOT-2025-10-16-a/swift-DEVELOPMENT-SNAPSHOT-2025-10-16-a_android-0.1.artifactbundle.tar.gz --checksum 451844c232cf1fa02c52431084ed3dc27a42d103635c6fa71bae8d66adba2500
@@ -149,6 +109,21 @@ jobs:
           cd hello
           swiftly run swift package init --type executable
           swiftly run swift build --swift-sdk x86_64-unknown-linux-android${ANDROID_API} --static-swift-stdlib
+
+      - name: Free Disk Space
+        if: runner.os == 'Linux'
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+
+      - name: Enable KVM
+        if: runner.os == 'Linux'
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
 
       - name: Android SDKs - setup environment
         run: yes y | sdkmanager --licenses
