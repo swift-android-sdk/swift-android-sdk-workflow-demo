@@ -117,12 +117,30 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - uses: skiptools/actions/setup-skip@v1
-
       - uses: nttld/setup-ndk@v1
         id: setup-ndk
         with:
           ndk-version: r27d
+
+      - name: "Install Swift Host Toolchain"
+        run: |
+          swiftly install main-snapshot-2025-10-16
+
+      - name: "Install Swift SDK for Android"
+        run: |
+          swift sdk install https://download.swift.org/development/android-sdk/swift-DEVELOPMENT-SNAPSHOT-2025-10-16-a/swift-DEVELOPMENT-SNAPSHOT-2025-10-16-a_android-0.1.artifactbundle.tar.gz --checksum 451844c232cf1fa02c52431084ed3dc27a42d103635c6fa71bae8d66adba2500
+
+      - name: "Setup Swift SDK for Android"
+        run: |
+          cd ~/Library/org.swift.swiftpm || cd ~/.swiftpm
+          ./swift-sdks/swift-DEVELOPMENT-SNAPSHOT-2025-10-16-a-android-0.1.artifactbundle/swift-android/scripts/setup-android-sdk.sh
+
+      - name: "Build Swift Executable for Android"
+        run: |
+          mkdir AndroidExeDemo
+          cd AndroidExeDemo
+          swift package init --type executable
+          swiftly run swift build --swift-sdk x86_64-unknown-linux-android${ANDROID_API} --static-swift-stdlib
 
       - name: "Setup Environment"
         run: |
@@ -133,10 +151,6 @@ jobs:
           if [[ "${RUNNER_OS}" == "Linux" ]]; then
             echo "ANDROID_AVD_HOME=${XDG_CONFIG_HOME}/.android/avd" >> $GITHUB_ENV
           fi
-
-      - uses: skiptools/swift-android-action@v2
-        with:
-          build-package: false
 
       - name: SDKs - accept licenses
         run: yes y | sdkmanager --licenses
@@ -175,12 +189,4 @@ jobs:
       - name: "Check Emulator"
         run: |
           adb shell 'echo Hello Android!'
-
-      - name: "Test Swift Package"
-        run: |
-          mkdir PackageDemo
-          cd PackageDemo
-          swift package init
-          swift test
-          skip android test --verbose --android-api-level ${ANDROID_API} --arch ${EMULATOR_ARCH}
 
