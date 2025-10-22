@@ -220,10 +220,10 @@ jobs:
 
       - name: Create run-tests script
         run: |
-          echo > run-tests.sh << EOF
+          echo > run-tests.sh << 'EOF'
           #!/bin/sh -ex
-          ORG=$(echo $1 | cut -f '/' -d 1)
-          PACKAGE=$(echo $1 | cut -f '/' -d 2)
+          ORG=$(echo "${1}" | cut -f '/' -d 1)
+          PACKAGE=$(echo "${1}" | cut -f '/' -d 2)
 
           git clone https://github.com/${ORG}/${PACKAGE}
           cd ${PACKAGE}
