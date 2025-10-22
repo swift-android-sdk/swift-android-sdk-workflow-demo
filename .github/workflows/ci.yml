@@ -218,27 +218,30 @@ jobs:
           adb push swift-sdks/${SWIFT_ANDROID_SDK_VERSION}*.artifactbundle/swift-android/swift-resources/usr/lib/swift-${ANDROID_EMULATOR_ARCH_TRIPLE}/android/*.so /data/local/tmp/
           cd -
 
-      - name: Run swift-algorithms tests on Android Emulator
+      - name: Create run-tests script
         run: |
-          git clone https://github.com/apple/swift-algorithms
-          cd swift-algorithms
+          echo > run-tests.sh << EOF
+          #!/bin/sh -ex
+          ORG=$(echo $1 | cut -f '/' -d 1)
+          PACKAGE=$(echo $1 | cut -f '/' -d 2)
+
+          git clone https://github.com/${ORG}/${PACKAGE}
+          cd ${PACKAGE}
+
           swift build --swift-sdk "${ANDROID_EMULATOR_ARCH_TRIPLE}-unknown-linux-android${ANDROID_API}" --build-tests
-          adb push .build/debug/swift-algorithmsPackageTests.xctest /data/local/tmp
-          adb shell /data/local/tmp/swift-algorithmsPackageTests.xctest
 
-      - name: run swift-crypto tests on android emulator
-        run: |
-          git clone https://github.com/apple/swift-crypto
-          cd swift-crypto
-          swift build --swift-sdk "${android_emulator_arch_triple}-unknown-linux-android${android_api}" --build-tests
-          adb push .build/debug/swift-cryptoPackageTests.xctest /data/local/tmp
-          adb shell /data/local/tmp/swift-cryptoPackageTests.xctest
+          adb push .build/debug/${PACKAGE}PackageTests.xctest /data/local/tmp
+          adb shell /data/local/tmp/${PACKAGE}PackageTests.xctest
+          EOF
 
-      - name: run swift-argument-parser tests on android emulator
-        run: |
-          git clone https://github.com/apple/swift-argument-parser
-          cd swift-argument-parser
-          swift build --swift-sdk "${android_emulator_arch_triple}-unknown-linux-android${android_api}" --build-tests
-          adb push .build/debug/swift-argument-parserPackageTests.xctest /data/local/tmp
-          adb shell /data/local/tmp/swift-argument-parserPackageTests.xctest
+          chmod +x run-tests.sh
+
+      - name: Run swift-algorithms tests
+        run: ./run-tests.sh apple/swift-algorithms
+
+      - name: Run swift-crypto tests
+        run: ./run-tests.sh apple/swift-crypto
+
+      - name: Run swift-argument-parser tests
+        run: ./run-tests.sh apple/swift-argument-parser
 
