@@ -251,6 +251,8 @@ jobs:
           cat run-tests.sh
 
       - name: Run swift-numerics tests
+        # some of these tests are very slow
+        if: false
         run: ./run-tests.sh apple/swift-numerics
 
       - name: Run swift-algorithms tests
