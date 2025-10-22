@@ -126,7 +126,7 @@ jobs:
           swiftly run swift --version
           swiftly run swift --version +"${SWIFT_TOOLCHAIN_VERSION}"
 
-      - name: Install Android NDK
+      - name: Setup Android NDK
         run: |
           # Only install the NDK if it is overridden
           # Otherwise use the runner-installed NDK
@@ -137,6 +137,10 @@ jobs:
             unzip -q android-ndk-${ANDROID_NDK_VERSION}-*.zip
             echo "ANDROID_NDK_HOME=${PWD}/android-ndk-${ANDROID_NDK_VERSION}" >> $GITHUB_ENV
           fi
+
+          # note that we must *not* have ANDROID_NDK_ROOT set!
+          # https://github.com/swiftlang/swift-driver/pull/1879
+          echo "ANDROID_NDK_ROOT=" >> $GITHUB_ENV
 
       - name: Setup Android Environment
         run: |
