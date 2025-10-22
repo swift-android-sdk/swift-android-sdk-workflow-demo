@@ -64,6 +64,7 @@ jobs:
       ANDROID_CHANNEL: "3"
       ANDROID_NDK_VERSION: "r27d"
       SWIFT_VERSION: "nightly-main"
+      BUILD_FLAGS: "--static-swift-stdlib"
 
     steps:
       - name: Free Disk Space
@@ -82,7 +83,7 @@ jobs:
         run: |
             #curl -s --retry 3 https://raw.githubusercontent.com/swiftlang/github-workflows/refs/heads/main/.github/workflows/scripts/install-and-build-with-sdk.sh | \
             curl -s --retry 3 https://raw.githubusercontent.com/swift-android-sdk/github-workflows/refs/heads/android-workflow/.github/workflows/scripts/install-and-build-with-sdk.sh | \
-            bash -s -- --android --flags="$BUILD_FLAGS" --android-sdk-triple="${{ inputs.android_sdk_triple }}" --android-ndk-version="${ANDROID_NDK_VERSION}" ${SWIFT_VERSION}
+            bash -s -- --android --flags="$BUILD_FLAGS" --android-sdk-triple="${ANDROID_EMULATOR_ARCH_TRIPLE}-unknown-linux-android${ANDROID_API}" --android-ndk-version="${ANDROID_NDK_VERSION}" ${SWIFT_VERSION}
 
       - name: Check Swift Package
         run: |
