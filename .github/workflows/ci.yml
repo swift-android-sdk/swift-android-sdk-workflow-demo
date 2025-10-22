@@ -87,12 +87,12 @@ jobs:
           if [[ "${RUNNER_OS}" == "macOS" ]]; then
             curl -fsSL -O https://download.swift.org/swiftly/darwin/swiftly.pkg
             installer -pkg swiftly.pkg -target CurrentUserHomeDirectory
-            ~/.swiftly/bin/swiftly init --quiet-shell-followup
+            ~/.swiftly/bin/swiftly init --quiet-shell-followup --skip-install
             . "${SWIFTLY_HOME_DIR:-$HOME/.swiftly}/env.sh"
           elif [[ "${RUNNER_OS}" == "Linux" ]]; then
             curl -fsSL -O https://download.swift.org/swiftly/linux/swiftly-$(uname -m).tar.gz
             tar zxf swiftly-$(uname -m).tar.gz
-            ./swiftly init --quiet-shell-followup
+            ./swiftly init --quiet-shell-followup --skip-install
             . "${SWIFTLY_HOME_DIR:-$HOME/.local/share/swiftly}/env.sh"
           else
             echo "Error: unsupported OS: ${RUNNER_OS}"
