@@ -121,7 +121,10 @@ jobs:
         run: swiftly run swift sdk install https://download.swift.org/development/android-sdk/${SWIFT_ANDROID_SDK_VERSION}/${SWIFT_ANDROID_SDK_VERSION}_android-0.1.artifactbundle.tar.gz --checksum ${SWIFT_ANDROID_SDK_CHECKSUM}
 
       - name: List Swift SDKs
-        run: swiftly run swift sdk list
+        run: |
+          swiftly run swift sdk list
+          swiftly run swift --version
+          swiftly run swift --version +"${SWIFT_TOOLCHAIN_VERSION}"
 
       - name: Install Android NDK
         run: |
@@ -228,7 +231,7 @@ jobs:
           git clone https://github.com/${ORG}/${PACKAGE}
           cd ${PACKAGE}
 
-          swiftly run swift build --swift-sdk "${ANDROID_EMULATOR_ARCH_TRIPLE}-unknown-linux-android${ANDROID_API}" --build-tests
+          swiftly run swift build --swift-sdk "${ANDROID_EMULATOR_ARCH_TRIPLE}-unknown-linux-android${ANDROID_API}" --build-tests +"${SWIFT_TOOLCHAIN_VERSION}"
 
           adb push .build/debug/${PACKAGE}PackageTests.xctest /data/local/tmp
           adb shell /data/local/tmp/${PACKAGE}PackageTests.xctest
@@ -236,6 +239,9 @@ jobs:
 
           chmod +x run-tests.sh
           cat run-tests.sh
+
+      - name: Run swift-numerics tests
+        run: ./run-tests.sh apple/swift-numerics
 
       - name: Run swift-algorithms tests
         run: ./run-tests.sh apple/swift-algorithms
@@ -245,4 +251,19 @@ jobs:
 
       - name: Run swift-argument-parser tests
         run: ./run-tests.sh apple/swift-argument-parser
+
+      - name: Run swift-nio tests
+        run: ./run-tests.sh apple/swift-nio
+
+      - name: Run swift-system tests
+        run: ./run-tests.sh apple/swift-system
+
+      - name: Run swift-collections tests
+        run: ./run-tests.sh apple/swift-collections
+
+      - name: Run swift-atomics tests
+        run: ./run-tests.sh apple/swift-atomics
+
+      - name: Run swift-nio tests
+        run: ./run-tests.sh apple/swift-nio
 
