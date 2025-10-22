@@ -238,6 +238,9 @@ jobs:
           swiftly run swift build --swift-sdk "${ANDROID_EMULATOR_ARCH_TRIPLE}-unknown-linux-android${ANDROID_API}" --build-tests +"${SWIFT_TOOLCHAIN_VERSION}"
 
           adb push .build/debug/${PACKAGE}PackageTests.xctest /data/local/tmp
+
+          adb shell ls /data/local/tmp/
+
           adb shell /data/local/tmp/${PACKAGE}PackageTests.xctest
           EOF
 
