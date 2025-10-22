@@ -85,12 +85,12 @@ jobs:
       - name: Install Swiftly
         run: |
           if [[ "${RUNNER_OS}" == "macOS" ]]; then
-            curl -O https://download.swift.org/swiftly/darwin/swiftly.pkg
+            curl -fsSL -O https://download.swift.org/swiftly/darwin/swiftly.pkg
             installer -pkg swiftly.pkg -target CurrentUserHomeDirectory
             ~/.swiftly/bin/swiftly init --quiet-shell-followup
             . "${SWIFTLY_HOME_DIR:-$HOME/.swiftly}/env.sh"
           elif [[ "${RUNNER_OS}" == "Linux" ]]; then
-            curl -O https://download.swift.org/swiftly/linux/swiftly-$(uname -m).tar.gz
+            curl -fsSL -O https://download.swift.org/swiftly/linux/swiftly-$(uname -m).tar.gz
             tar zxf swiftly-$(uname -m).tar.gz
             ./swiftly init --quiet-shell-followup
             . "${SWIFTLY_HOME_DIR:-$HOME/.local/share/swiftly}/env.sh"
@@ -109,13 +109,13 @@ jobs:
 
           echo "SWIFT_TOOLCHAIN_VERSION=${snapshot_tag}" >> ${GITHUB_ENV}
           echo "SWIFT_ANDROID_SDK_VERSION=${snapshot_tag}" >> ${GITHUB_ENV}
-          echo "SWIFT_ANDROID_SDK_CHECKSUM=${checksum} >> ${GITHUB_ENV}
+          echo "SWIFT_ANDROID_SDK_CHECKSUM=${checksum}" >> ${GITHUB_ENV}
 
       - name: Install Swift Host Toolchain
         run: swiftly install --use "${SWIFT_TOOLCHAIN_VERSION}"
 
       - name: Install Swift SDK for Android
-        run: swift sdk install https://download.swift.org/development/android-sdk/${SWIFT_ANDROID_SDK_VERSION}-a/${SWIFT_ANDROID_SDK_VERSION}-a_android-0.1.artifactbundle.tar.gz --checksum ${SWIFT_ANDROID_SDK_CHECKSUM}
+        run: swift sdk install https://download.swift.org/development/android-sdk/${SWIFT_ANDROID_SDK_VERSION}/${SWIFT_ANDROID_SDK_VERSION}_android-0.1.artifactbundle.tar.gz --checksum ${SWIFT_ANDROID_SDK_CHECKSUM}
 
       - name: List Swift SDKs
         run: swift sdk list
@@ -140,7 +140,7 @@ jobs:
       - name: Setup Swift SDK for Android
         run: |
           cd ~/Library/org.swift.swiftpm || cd ${XDG_CONFIG_HOME}/swiftpm || cd ~/.local/swiftpm || cd ~/.swiftpm
-          ./swift-sdks/${SWIFT_ANDROID_SDK_VERSION}-a-android-0.1.artifactbundle/swift-android/scripts/setup-android-sdk.sh
+          ./swift-sdks/${SWIFT_ANDROID_SDK_VERSION}*.artifactbundle/swift-android/scripts/setup-android-sdk.sh
 
       - name: Build Swift Executable for Android
         run: |
