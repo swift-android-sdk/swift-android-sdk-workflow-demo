@@ -228,7 +228,7 @@ jobs:
           git clone https://github.com/${ORG}/${PACKAGE}
           cd ${PACKAGE}
 
-          swift build --swift-sdk "${ANDROID_EMULATOR_ARCH_TRIPLE}-unknown-linux-android${ANDROID_API}" --build-tests
+          swiftly run swift build --swift-sdk "${ANDROID_EMULATOR_ARCH_TRIPLE}-unknown-linux-android${ANDROID_API}" --build-tests
 
           adb push .build/debug/${PACKAGE}PackageTests.xctest /data/local/tmp
           adb shell /data/local/tmp/${PACKAGE}PackageTests.xctest
