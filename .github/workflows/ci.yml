@@ -147,6 +147,23 @@ jobs:
           mkdir hello
           cd hello
           swiftly run swift package init --type executable
+
+          # make the contents a bit more interesting
+          cat > Sources/hello/hello.swift << "EOF"
+          import Foundation
+          import FoundationNetworking
+          import FoundationXML
+
+          @main
+          struct hello {
+              static func main() async throws {
+                  print("Hello, world!")
+                  let (data, _) = try await URLSession.shared.data(from: URL(fileURLWithPath: "/etc/hosts"))
+                  print(String(data: data, encoding: .utf8) ?? "")
+              }
+          }
+          EOF
+
           swiftly run swift build --swift-sdk "${ANDROID_EMULATOR_ARCH_TRIPLE}-unknown-linux-android${ANDROID_API}" --static-swift-stdlib
           file .build/debug/hello
 
