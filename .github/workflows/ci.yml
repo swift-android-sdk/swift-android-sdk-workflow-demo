@@ -4,6 +4,9 @@ on:
     branches: [ main ]
   workflow_dispatch:
   pull_request:
+  schedule:
+    - cron: '0 1,7,13,20 * * *'
+
 jobs:
   install-sdk:
     strategy:
@@ -62,9 +65,6 @@ jobs:
       ANDROID_PROFILE: "Nexus 10"
       ANDROID_CHANNEL: "3"
       ANDROID_NDK_VERSION: "r27d"
-      SWIFT_TOOLCHAIN_VERSION: "swift-DEVELOPMENT-SNAPSHOT-2025-10-16"
-      SWIFT_ANDROID_SDK_VERSION: "swift-DEVELOPMENT-SNAPSHOT-2025-10-16"
-      SWIFT_ANDROID_SDK_CHECKSUM: "451844c232cf1fa02c52431084ed3dc27a42d103635c6fa71bae8d66adba2500"
     steps:
       - name: Free Disk Space
         if: runner.os == 'Linux'
@@ -85,22 +85,31 @@ jobs:
       - name: Install Swiftly
         run: |
           if [[ "${RUNNER_OS}" == "macOS" ]]; then
-            curl -O https://download.swift.org/swiftly/darwin/swiftly.pkg && \
-            installer -pkg swiftly.pkg -target CurrentUserHomeDirectory && \
-            ~/.swiftly/bin/swiftly init --quiet-shell-followup && \
-            . "${SWIFTLY_HOME_DIR:-$HOME/.swiftly}/env.sh" && \
-            hash -r
+            curl -O https://download.swift.org/swiftly/darwin/swiftly.pkg
+            installer -pkg swiftly.pkg -target CurrentUserHomeDirectory
+            ~/.swiftly/bin/swiftly init --quiet-shell-followup
+            . "${SWIFTLY_HOME_DIR:-$HOME/.swiftly}/env.sh"
           elif [[ "${RUNNER_OS}" == "Linux" ]]; then
-            curl -O https://download.swift.org/swiftly/linux/swiftly-$(uname -m).tar.gz && \
-            tar zxf swiftly-$(uname -m).tar.gz && \
-            ./swiftly init --quiet-shell-followup && \
-            . "${SWIFTLY_HOME_DIR:-$HOME/.local/share/swiftly}/env.sh" && \
-            hash -r
+            curl -O https://download.swift.org/swiftly/linux/swiftly-$(uname -m).tar.gz
+            tar zxf swiftly-$(uname -m).tar.gz
+            ./swiftly init --quiet-shell-followup
+            . "${SWIFTLY_HOME_DIR:-$HOME/.local/share/swiftly}/env.sh"
           else
             echo "Error: unsupported OS: ${RUNNER_OS}"
             exit 1
           fi
+          hash -r
           echo "${SWIFTLY_BIN_DIR}" >> "${GITHUB_PATH}"
+
+      - name: Get Latest Toolchain Info
+        run: |
+          sdk_json=$(curl -fsSL "https://www.swift.org/api/v1/install/dev/main/android-sdk.json") || fatal "Failed to fetch android-sdk development snapshots"
+          snapshot_tag=$(echo "$sdk_json" | jq -r '.[0].dir')
+          checksum=$(echo "$sdk_json" | jq -r '.[0].checksum')
+
+          echo "SWIFT_TOOLCHAIN_VERSION=${snapshot_tag}" >> ${GITHUB_ENV}
+          echo "SWIFT_ANDROID_SDK_VERSION=${snapshot_tag}" >> ${GITHUB_ENV}
+          echo "SWIFT_ANDROID_SDK_CHECKSUM=${checksum} >> ${GITHUB_ENV}
 
       - name: Install Swift Host Toolchain
         run: swiftly install --use "${SWIFT_TOOLCHAIN_VERSION}"
