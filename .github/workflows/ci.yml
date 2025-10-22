@@ -69,6 +69,24 @@ jobs:
       ANDROID_CHANNEL: "3"
       ANDROID_NDK_VERSION: "${{ matrix.NDK_VERSION }}"
     steps:
+      - name: Create run-tests script
+        run: |
+          echo > run-tests.sh << "EOF"
+          #!/bin/bash -ex
+          ORG=$(echo "${1}" | cut -f '/' -d 1)
+          PACKAGE=$(echo "${1}" | cut -f '/' -d 2)
+
+          git clone https://github.com/${ORG}/${PACKAGE}
+          cd ${PACKAGE}
+
+          swiftly run swift build --swift-sdk "${ANDROID_EMULATOR_ARCH_TRIPLE}-unknown-linux-android${ANDROID_API}" --build-tests
+
+          adb push .build/debug/${PACKAGE}PackageTests.xctest /data/local/tmp
+          adb shell /data/local/tmp/${PACKAGE}PackageTests.xctest
+          EOF
+
+          chmod +x run-tests.sh
+          cat run-tests.sh
       - name: Free Disk Space
         if: runner.os == 'Linux'
         run: |
@@ -118,10 +136,10 @@ jobs:
         run: swiftly install --use "${SWIFT_TOOLCHAIN_VERSION}"
 
       - name: Install Swift SDK for Android
-        run: swift sdk install https://download.swift.org/development/android-sdk/${SWIFT_ANDROID_SDK_VERSION}/${SWIFT_ANDROID_SDK_VERSION}_android-0.1.artifactbundle.tar.gz --checksum ${SWIFT_ANDROID_SDK_CHECKSUM}
+        run: swiftly run swift sdk install https://download.swift.org/development/android-sdk/${SWIFT_ANDROID_SDK_VERSION}/${SWIFT_ANDROID_SDK_VERSION}_android-0.1.artifactbundle.tar.gz --checksum ${SWIFT_ANDROID_SDK_CHECKSUM}
 
       - name: List Swift SDKs
-        run: swift sdk list
+        run: swiftly run swift sdk list
 
       - name: Install Android NDK
         run: |
@@ -218,23 +236,6 @@ jobs:
           adb push swift-sdks/${SWIFT_ANDROID_SDK_VERSION}*.artifactbundle/swift-android/swift-resources/usr/lib/swift-${ANDROID_EMULATOR_ARCH_TRIPLE}/android/*.so /data/local/tmp/
           cd -
 
-      - name: Create run-tests script
-        run: |
-          echo > run-tests.sh << 'EOF'
-          #!/bin/sh -ex
-          ORG=$(echo "${1}" | cut -f '/' -d 1)
-          PACKAGE=$(echo "${1}" | cut -f '/' -d 2)
-
-          git clone https://github.com/${ORG}/${PACKAGE}
-          cd ${PACKAGE}
-
-          swiftly run swift build --swift-sdk "${ANDROID_EMULATOR_ARCH_TRIPLE}-unknown-linux-android${ANDROID_API}" --build-tests
-
-          adb push .build/debug/${PACKAGE}PackageTests.xctest /data/local/tmp
-          adb shell /data/local/tmp/${PACKAGE}PackageTests.xctest
-          EOF
-
-          chmod +x run-tests.sh
 
       - name: Run swift-algorithms tests
         run: ./run-tests.sh apple/swift-algorithms
