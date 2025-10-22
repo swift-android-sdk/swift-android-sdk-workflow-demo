@@ -154,25 +154,6 @@ jobs:
           mkdir hello
           cd hello
           swiftly run swift package init --type executable
-
-          if [[ "0" == "1" ]]; then
-            # make the contents a bit more interesting
-            cat > Sources/hello/hello.swift << "EOF"
-            import Foundation
-            import FoundationNetworking
-            import FoundationXML
-  
-            @main
-            struct hello {
-                static func main() async throws {
-                    print("Hello, world!")
-                    let (data, _) = try await URLSession.shared.data(from: URL(fileURLWithPath: "/etc/hosts"))
-                    print(String(data: data, encoding: .utf8) ?? "")
-                }
-            }
-            EOF
-          fi
-
           swiftly run swift build --swift-sdk "${ANDROID_EMULATOR_ARCH_TRIPLE}-unknown-linux-android${ANDROID_API}" --static-swift-stdlib
           file .build/debug/hello
 
@@ -230,18 +211,34 @@ jobs:
           adb push $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/*/sysroot/usr/lib/${ANDROID_EMULATOR_ARCH_TRIPLE}-linux-android/libc++_shared.so /data/local/tmp/
           adb shell /data/local/tmp/hello
 
-      - name: Run Swift Package tests Android Emulator
+      - name: Install testing prerequisites on Android Emulator
         run: |
-          git clone https://github.com/apple/swift-algorithms
-          cd swift-algorithms
-          swiftly run swift build --swift-sdk "${ANDROID_EMULATOR_ARCH_TRIPLE}-unknown-linux-android${ANDROID_API}" --build-tests
-
-          adb push .build/debug/swift-algorithmsPackageTests.xctest /data/local/tmp
-
           cd ~/Library/org.swift.swiftpm || cd ${XDG_CONFIG_HOME}/swiftpm || cd ~/.local/swiftpm || cd ~/.swiftpm
           # add necessary dependencies
           adb push swift-sdks/${SWIFT_ANDROID_SDK_VERSION}*.artifactbundle/swift-resources/usr/lib/swift-${ANDROID_EMULATOR_ARCH_TRIPLE}/android/*.so /data/local/tmp/
           cd -
 
+      - name: Run swift-algorithms tests on Android Emulator
+        run: |
+          git clone https://github.com/apple/swift-algorithms
+          cd swift-algorithms
+          swift build --swift-sdk "${ANDROID_EMULATOR_ARCH_TRIPLE}-unknown-linux-android${ANDROID_API}" --build-tests
+          adb push .build/debug/swift-algorithmsPackageTests.xctest /data/local/tmp
           adb shell /data/local/tmp/swift-algorithmsPackageTests.xctest
+
+      - name: run swift-crypto tests on android emulator
+        run: |
+          git clone https://github.com/apple/swift-crypto
+          cd swift-crypto
+          swift build --swift-sdk "${android_emulator_arch_triple}-unknown-linux-android${android_api}" --build-tests
+          adb push .build/debug/swift-cryptoPackageTests.xctest /data/local/tmp
+          adb shell /data/local/tmp/swift-cryptoPackageTests.xctest
+
+      - name: run swift-argument-parser tests on android emulator
+        run: |
+          git clone https://github.com/apple/swift-argument-parser
+          cd swift-argument-parser
+          swift build --swift-sdk "${android_emulator_arch_triple}-unknown-linux-android${android_api}" --build-tests
+          adb push .build/debug/swift-argument-parserPackageTests.xctest /data/local/tmp
+          adb shell /data/local/tmp/swift-argument-parserPackageTests.xctest
 
