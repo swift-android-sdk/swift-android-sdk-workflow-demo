@@ -81,9 +81,11 @@ jobs:
 
       - name: Build Package for Android
         run: |
-            #curl -s --retry 3 https://raw.githubusercontent.com/swiftlang/github-workflows/refs/heads/main/.github/workflows/scripts/install-and-build-with-sdk.sh | \
-            curl -s --retry 3 https://raw.githubusercontent.com/swift-android-sdk/github-workflows/refs/heads/android-workflow/.github/workflows/scripts/install-and-build-with-sdk.sh | \
-            bash -s -- --android --flags="$BUILD_FLAGS" --android-sdk-triple="${ANDROID_EMULATOR_ARCH_TRIPLE}-unknown-linux-android${ANDROID_API}" --android-ndk-version="${ANDROID_NDK_VERSION}" ${SWIFT_VERSION}
+          # TODO: the install-and-build-with-sdk.sh script does not yet
+          # support macOS, so use swiftly to install and setup the toolchain…
+          #curl -s --retry 3 https://raw.githubusercontent.com/swiftlang/github-workflows/refs/heads/main/.github/workflows/scripts/install-and-build-with-sdk.sh | \
+          curl -s --retry 3 https://raw.githubusercontent.com/swift-android-sdk/github-workflows/refs/heads/android-workflow/.github/workflows/scripts/install-and-build-with-sdk.sh | \
+          bash -s -- --android --flags="$BUILD_FLAGS" --android-sdk-triple="${ANDROID_EMULATOR_ARCH_TRIPLE}-unknown-linux-android${ANDROID_API}" --android-ndk-version="${ANDROID_NDK_VERSION}" ${SWIFT_VERSION}
 
       - name: Check Swift Package
         run: |
