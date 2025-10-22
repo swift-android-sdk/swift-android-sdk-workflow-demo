@@ -71,7 +71,7 @@ jobs:
     steps:
       - name: Create run-tests script
         run: |
-          echo > run-tests.sh << "EOF"
+          cat > run-tests.sh << "EOF"
           #!/bin/bash -ex
           ORG=$(echo "${1}" | cut -f '/' -d 1)
           PACKAGE=$(echo "${1}" | cut -f '/' -d 2)
