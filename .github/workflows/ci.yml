@@ -215,7 +215,7 @@ jobs:
         run: |
           cd ~/Library/org.swift.swiftpm || cd ${XDG_CONFIG_HOME}/swiftpm || cd ~/.local/swiftpm || cd ~/.swiftpm
           # add necessary dependencies
-          adb push swift-sdks/${SWIFT_ANDROID_SDK_VERSION}*.artifactbundle/swift-resources/usr/lib/swift-${ANDROID_EMULATOR_ARCH_TRIPLE}/android/*.so /data/local/tmp/
+          adb push swift-sdks/${SWIFT_ANDROID_SDK_VERSION}*.artifactbundle/swift-android/swift-resources/usr/lib/swift-${ANDROID_EMULATOR_ARCH_TRIPLE}/android/*.so /data/local/tmp/
           cd -
 
       - name: Run swift-algorithms tests on Android Emulator
