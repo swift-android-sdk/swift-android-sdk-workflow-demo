@@ -75,6 +75,7 @@ jobs:
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
 
       - name: Install Prerequisites
+        if: false
         run: |
           if [[ "${RUNNER_OS}" == "Linux" ]]; then
             # libcurl4-openssl-dev needed for host toolchain
@@ -83,6 +84,7 @@ jobs:
 
       # swiftly install instructions from https://www.swift.org/install/linux/
       - name: Install Swiftly
+        if: false
         run: |
           if [[ "${RUNNER_OS}" == "macOS" ]]; then
             curl -O https://download.swift.org/swiftly/darwin/swiftly.pkg && \
@@ -103,15 +105,19 @@ jobs:
           echo "${SWIFTLY_BIN_DIR}" >> "${GITHUB_PATH}"
 
       - name: Install Swift Host Toolchain
+        if: false
         run: swiftly install --use "${SWIFT_TOOLCHAIN_VERSION}"
 
       - name: Install Swift SDK for Android
+        if: false
         run: swift sdk install https://download.swift.org/development/android-sdk/${SWIFT_ANDROID_SDK_VERSION}-a/${SWIFT_ANDROID_SDK_VERSION}-a_android-0.1.artifactbundle.tar.gz --checksum ${SWIFT_ANDROID_SDK_CHECKSUM}
 
       - name: List Swift SDKs
+        if: false
         run: swift sdk list
 
       - name: Install Android NDK
+        if: false
         run: |
           mkdir ~/android-ndk
           cd ~/android-ndk
@@ -120,6 +126,7 @@ jobs:
           echo "ANDROID_NDK_HOME=${PWD}/android-ndk-${ANDROID_NDK_VERSION}" >> $GITHUB_ENV
 
       - name: Setup Android Environment
+        if: false
         run: |
           echo "$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/emulator:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/${{ env.ANDROID_BUILD_TOOLS_VERSION }}" >> $GITHUB_PATH
           # needed for Linux or else the emulator will be created in
@@ -129,16 +136,26 @@ jobs:
           fi
 
       - name: Setup Swift SDK for Android
+        if: false
         run: |
           cd ~/Library/org.swift.swiftpm || cd ${XDG_CONFIG_HOME}/swiftpm || cd ~/.local/swiftpm || cd ~/.swiftpm
           ./swift-sdks/${SWIFT_ANDROID_SDK_VERSION}-a-android-0.1.artifactbundle/swift-android/scripts/setup-android-sdk.sh
 
-      - name: Build Swift Executable for Android
+      - name: Create Swift Package
         run: |
-          mkdir hello
-          cd hello
-          swiftly run swift package init --type executable
-          swiftly run swift build --swift-sdk "${ANDROID_EMULATOR_ARCH_TRIPLE}-unknown-linux-android${ANDROID_API}" --static-swift-stdlib
+          swift package init --name hello --type executable
+
+      - name: Build Package for Android
+        uses: swiftlang/github-workflows/.github/workflows/swift_package_test.yml@main
+        with:
+          enable_android_sdk_build: true
+          #android_ndk_version: ${ANDROID_NDK_VERSION}
+          enable_linux_checks: false
+          enable_macos_checks: false
+          enable_windows_checks: false
+
+      - name: Check Swift Package
+        run: |
           file .build/debug/hello
 
       - name: Enable KVM
@@ -190,7 +207,6 @@ jobs:
 
       - name: Push Swift Executable to Android Emulator
         run: |
-          cd hello
           adb push .build/debug/hello /data/local/tmp
           adb push $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/*/sysroot/usr/lib/${ANDROID_EMULATOR_ARCH_TRIPLE}-linux-android/libc++_shared.so /data/local/tmp/
 
