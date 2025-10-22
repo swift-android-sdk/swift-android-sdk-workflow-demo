@@ -223,6 +223,9 @@ jobs:
           cd ~/Library/org.swift.swiftpm || cd ${XDG_CONFIG_HOME}/swiftpm || cd ~/.local/swiftpm || cd ~/.swiftpm
           # add necessary dependencies
           adb push swift-sdks/${SWIFT_ANDROID_SDK_VERSION}*.artifactbundle/swift-android/swift-resources/usr/lib/swift-${ANDROID_EMULATOR_ARCH_TRIPLE}/android/*.so /data/local/tmp/
+
+          adb shell ls /data/local/tmp/
+
           cd -
 
       - name: Create run-tests script
@@ -237,7 +240,7 @@ jobs:
 
           swiftly run swift build --swift-sdk "${ANDROID_EMULATOR_ARCH_TRIPLE}-unknown-linux-android${ANDROID_API}" --build-tests +"${SWIFT_TOOLCHAIN_VERSION}"
 
-          adb push .build/debug/${PACKAGE}PackageTests.xctest /data/local/tmp
+          adb push .build/debug/${PACKAGE}PackageTests.xctest /data/local/tmp/
 
           adb shell ls /data/local/tmp/
 
