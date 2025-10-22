@@ -16,6 +16,7 @@ jobs:
           - name: 'macOS 15 X64 API 28'
             os: 'macos-15-intel'
             ANDROID_API: 28
+            NDK_VERSION: 'r27d'
             EMULATOR_ARCH: 'x86_64'
             EMULATOR_ARCH_TRIPLE: 'x86_64'
             EMULATOR_GPU: 'swiftshader_indirect'
@@ -23,6 +24,7 @@ jobs:
           - name: 'Ubuntu X64 API 28'
             os: 'ubuntu-latest'
             ANDROID_API: 28
+            NDK_VERSION: 'r28c'
             EMULATOR_ARCH: 'x86_64'
             EMULATOR_ARCH_TRIPLE: 'x86_64'
             EMULATOR_GPU: 'swiftshader_indirect'
@@ -30,6 +32,7 @@ jobs:
           - name: 'Ubuntu X64 API 35'
             os: 'ubuntu-latest'
             ANDROID_API: 35
+            NDK_VERSION: 'r29'
             EMULATOR_ARCH: 'x86_64'
             EMULATOR_ARCH_TRIPLE: 'x86_64'
             EMULATOR_GPU: 'swiftshader_indirect'
@@ -64,7 +67,7 @@ jobs:
       ANDROID_EMULATOR_NAME: 'demo'
       ANDROID_PROFILE: "Nexus 10"
       ANDROID_CHANNEL: "3"
-      ANDROID_NDK_VERSION: "r27d"
+      ANDROID_NDK_VERSION: "${{ matrix.NDK_VERSION }}"
     steps:
       - name: Free Disk Space
         if: runner.os == 'Linux'
@@ -122,11 +125,15 @@ jobs:
 
       - name: Install Android NDK
         run: |
-          mkdir ~/android-ndk
-          cd ~/android-ndk
-          curl -fsSLO https://dl.google.com/android/repository/android-ndk-${ANDROID_NDK_VERSION}-$(uname -s).zip
-          unzip -q android-ndk-${ANDROID_NDK_VERSION}-*.zip
-          echo "ANDROID_NDK_HOME=${PWD}/android-ndk-${ANDROID_NDK_VERSION}" >> $GITHUB_ENV
+          # Only install the NDK if it is overridden
+          # Otherwise use the runner-installed NDK
+          if [[ ! -z "${ANDROID_NDK_VERSION}" ]]; then
+            mkdir ~/android-ndk
+            cd ~/android-ndk
+            curl -fsSLO https://dl.google.com/android/repository/android-ndk-${ANDROID_NDK_VERSION}-$(uname -s).zip
+            unzip -q android-ndk-${ANDROID_NDK_VERSION}-*.zip
+            echo "ANDROID_NDK_HOME=${PWD}/android-ndk-${ANDROID_NDK_VERSION}" >> $GITHUB_ENV
+          fi
 
       - name: Setup Android Environment
         run: |
@@ -148,21 +155,23 @@ jobs:
           cd hello
           swiftly run swift package init --type executable
 
-          # make the contents a bit more interesting
-          cat > Sources/hello/hello.swift << "EOF"
-          import Foundation
-          import FoundationNetworking
-          import FoundationXML
-
-          @main
-          struct hello {
-              static func main() async throws {
-                  print("Hello, world!")
-                  let (data, _) = try await URLSession.shared.data(from: URL(fileURLWithPath: "/etc/hosts"))
-                  print(String(data: data, encoding: .utf8) ?? "")
-              }
-          }
-          EOF
+          if [[ "0" == "1" ]]; then
+            # make the contents a bit more interesting
+            cat > Sources/hello/hello.swift << "EOF"
+            import Foundation
+            import FoundationNetworking
+            import FoundationXML
+  
+            @main
+            struct hello {
+                static func main() async throws {
+                    print("Hello, world!")
+                    let (data, _) = try await URLSession.shared.data(from: URL(fileURLWithPath: "/etc/hosts"))
+                    print(String(data: data, encoding: .utf8) ?? "")
+                }
+            }
+            EOF
+          fi
 
           swiftly run swift build --swift-sdk "${ANDROID_EMULATOR_ARCH_TRIPLE}-unknown-linux-android${ANDROID_API}" --static-swift-stdlib
           file .build/debug/hello
@@ -214,13 +223,25 @@ jobs:
         run: |
           adb shell 'echo Hello Android!'
 
-      - name: Push Swift Executable to Android Emulator
+      - name: Run Swift Executable on Android Emulator
         run: |
           cd hello
           adb push .build/debug/hello /data/local/tmp
           adb push $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/*/sysroot/usr/lib/${ANDROID_EMULATOR_ARCH_TRIPLE}-linux-android/libc++_shared.so /data/local/tmp/
-
-      - name: Run Swift Executable on Android Emulator
-        run: |
           adb shell /data/local/tmp/hello
+
+      - name: Run Swift Package tests Android Emulator
+        run: |
+          git clone https://github.com/apple/swift-algorithms
+          cd swift-algorithms
+          swiftly run swift build --swift-sdk "${ANDROID_EMULATOR_ARCH_TRIPLE}-unknown-linux-android${ANDROID_API}" --build-tests
+
+          adb push .build/debug/swift-algorithmsPackageTests.xctest /data/local/tmp
+
+          cd ~/Library/org.swift.swiftpm || cd ${XDG_CONFIG_HOME}/swiftpm || cd ~/.local/swiftpm || cd ~/.swiftpm
+          # add necessary dependencies
+          adb push swift-sdks/${SWIFT_ANDROID_SDK_VERSION}*.artifactbundle/swift-resources/usr/lib/swift-${ANDROID_EMULATOR_ARCH_TRIPLE}/android/*.so /data/local/tmp/
+          cd -
+
+          adb shell /data/local/tmp/swift-algorithmsPackageTests.xctest
 
