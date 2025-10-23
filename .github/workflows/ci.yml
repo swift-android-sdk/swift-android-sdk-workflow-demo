@@ -19,7 +19,6 @@ jobs:
             NDK_VERSION: 'r27d'
             EMULATOR_ARCH: 'x86_64'
             EMULATOR_ARCH_TRIPLE: 'x86_64'
-            EMULATOR_GPU: 'swiftshader_indirect'
 
           - name: 'Ubuntu X64 API 28'
             os: 'ubuntu-latest'
@@ -27,7 +26,6 @@ jobs:
             NDK_VERSION: 'r28c'
             EMULATOR_ARCH: 'x86_64'
             EMULATOR_ARCH_TRIPLE: 'x86_64'
-            EMULATOR_GPU: 'swiftshader_indirect'
 
           - name: 'Ubuntu X64 API 35'
             os: 'ubuntu-latest'
@@ -35,7 +33,6 @@ jobs:
             NDK_VERSION: 'r29'
             EMULATOR_ARCH: 'x86_64'
             EMULATOR_ARCH_TRIPLE: 'x86_64'
-            EMULATOR_GPU: 'swiftshader_indirect'
 
           # Android SDK for Linux is only x86_64
           #- name: 'Ubuntu ARM API 28'
@@ -43,7 +40,6 @@ jobs:
           #  ANDROID_API: 28
           #  EMULATOR_ARCH: 'arm64-v8a'
           #  EMULATOR_ARCH_TRIPLE: 'aarch64'
-          #  EMULATOR_GPU: 'swiftshader_indirect'
 
           # Cannot test on ARM macOS because Android emulator required nested
           # virtualization
@@ -52,14 +48,12 @@ jobs:
           #  ANDROID_API: 28
           #  EMULATOR_ARCH: 'arm64-v8a'
           #  EMULATOR_ARCH_TRIPLE: 'aarch64'
-          #  EMULATOR_GPU: 'swiftshader_indirect'
 
     runs-on: ${{ matrix.os }}
     env:
       ANDROID_API: ${{ matrix.ANDROID_API }}
       ANDROID_EMULATOR_ARCH: ${{ matrix.EMULATOR_ARCH }}
       ANDROID_EMULATOR_ARCH_TRIPLE: ${{ matrix.EMULATOR_ARCH_TRIPLE }}
-      ANDROID_EMULATOR_GPU: ${{ matrix.EMULATOR_GPU }}
       ANDROID_TARGET: 'default'
       #ANDROID_BUILD_TOOLS_VERSION: 36.0.0
       ANDROID_BUILD_TOOLS_VERSION: 'latest'
@@ -195,7 +189,7 @@ jobs:
       #  run: emulator -list-avds
 
       - name: Android - Boot
-        run: nohup emulator -memory 4096 -avd "${ANDROID_EMULATOR_NAME}" -wipe-data -no-window -accel off -no-accel -gpu "${ANDROID_EMULATOR_GPU}" -no-snapshot -noaudio -no-boot-anim 2>&1 > emulator.log &
+        run: nohup emulator -memory 4096 -avd "${ANDROID_EMULATOR_NAME}" -wipe-data -no-window -no-snapshot -noaudio -no-boot-anim 2>&1 > emulator.log &
 
       - name: ADB Wait For Device
         run: adb wait-for-any-device
