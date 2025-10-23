@@ -267,13 +267,15 @@ jobs:
         run: ./run-tests.sh apple/swift-algorithms
 
       - name: Run swift-crypto tests
+        # needs: Tests/CryptoExtrasVectors/rfc-7914-scrypt.txt
+        if: false
         run: ./run-tests.sh apple/swift-crypto
-
-      - name: Run swift-argument-parser tests
-        run: ./run-tests.sh apple/swift-argument-parser
 
       - name: Run swift-nio tests
         run: ./run-tests.sh apple/swift-nio
+
+      - name: Run swift-argument-parser tests
+        run: ./run-tests.sh apple/swift-argument-parser
 
       - name: Run swift-system tests
         run: ./run-tests.sh apple/swift-system
