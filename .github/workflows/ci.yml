@@ -241,6 +241,8 @@ jobs:
           swiftly run swift build --swift-sdk "${ANDROID_EMULATOR_ARCH_TRIPLE}-unknown-linux-android${ANDROID_API}" --build-tests +"${SWIFT_TOOLCHAIN_VERSION}"
 
           adb push .build/debug/${PACKAGE}PackageTests.xctest /data/local/tmp/
+          # copy up any test resources
+          adb push .build/debug/*.resources /data/local/tmp/ || true
 
           # push potential dependent libraries
           adb push $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/*/sysroot/usr/lib/${ANDROID_EMULATOR_ARCH_TRIPLE}-linux-android/libc++_shared.so /data/local/tmp/
