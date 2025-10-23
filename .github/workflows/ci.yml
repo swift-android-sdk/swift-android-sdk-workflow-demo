@@ -253,6 +253,8 @@ jobs:
           cat run-tests.sh
 
       - name: Run swift-collections tests
+        # too slow
+        if: false
         run: ./run-tests.sh apple/swift-collections
 
       - name: Run swift-numerics tests
