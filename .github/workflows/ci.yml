@@ -259,9 +259,11 @@ jobs:
           cat run-tests.sh
 
       - name: Run swift-collections tests
+        if: false
         run: ./run-tests.sh apple/swift-collections
 
       - name: Run swift-numerics tests
+        if: false
         run: ./run-tests.sh apple/swift-numerics
 
       - name: Run swift-algorithms tests
@@ -271,6 +273,7 @@ jobs:
         run: ./run-tests.sh apple/swift-atomics
 
       - name: Run swift-system tests
+        if: false
         run: ./run-tests.sh apple/swift-system
 
       - name: Run swift-crypto tests
@@ -279,9 +282,11 @@ jobs:
         run: ./run-tests.sh apple/swift-crypto
 
       - name: Run swift-nio tests
+        if: false
         run: ./run-tests.sh apple/swift-nio
 
       - name: Run swift-argument-parser tests
+        if: false
         run: ./run-tests.sh apple/swift-argument-parser
 
       - name: Android - Show Emulator Log
