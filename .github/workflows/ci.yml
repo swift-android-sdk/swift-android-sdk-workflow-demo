@@ -195,7 +195,7 @@ jobs:
       #  run: emulator -list-avds
 
       - name: Android - Boot
-        run: nohup emulator -memory 4096 -avd "${ANDROID_EMULATOR_NAME}" -wipe-data -no-window -accel off -no-accel -gpu "${ANDROID_EMULATOR_GPU}" -no-snapshot -noaudio -no-boot-anim &
+        run: nohup emulator -memory 4096 -avd "${ANDROID_EMULATOR_NAME}" -wipe-data -no-window -accel off -no-accel -gpu "${ANDROID_EMULATOR_GPU}" -no-snapshot -noaudio -no-boot-anim 2>&1 > emulator.log &
 
       - name: ADB Wait For Device
         run: adb wait-for-any-device
@@ -242,6 +242,11 @@ jobs:
 
           adb push .build/debug/${PACKAGE}PackageTests.xctest /data/local/tmp/
 
+          # push potential dependent libraries
+          cd ~/Library/org.swift.swiftpm || cd ${XDG_CONFIG_HOME}/swiftpm || cd ~/.local/swiftpm || cd ~/.swiftpm
+          adb push swift-sdks/${SWIFT_ANDROID_SDK_VERSION}*.artifactbundle/swift-android/swift-resources/usr/lib/swift-${ANDROID_EMULATOR_ARCH_TRIPLE}/android/*.so /data/local/tmp/
+          cd -
+
           adb shell ls /data/local/tmp/
 
           adb shell /data/local/tmp/${PACKAGE}PackageTests.xctest
@@ -278,4 +283,8 @@ jobs:
 
       - name: Run swift-nio tests
         run: ./run-tests.sh apple/swift-nio
+
+      - name: Android - Show Emulator Log
+        if: always()
+        run: cat emulator.log || true
 
