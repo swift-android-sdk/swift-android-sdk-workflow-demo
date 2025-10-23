@@ -213,6 +213,8 @@ jobs:
           adb shell /data/local/tmp/hello
 
       - name: Install testing prerequisites on Android Emulator
+        # not needed when building with --static-swift-stdlib
+        if: false
         run: |
           cd ~/Library/org.swift.swiftpm || cd ${XDG_CONFIG_HOME}/swiftpm || cd ~/.local/swiftpm || cd ~/.swiftpm
           # add necessary dependencies
@@ -232,7 +234,7 @@ jobs:
           git clone https://github.com/${ORG}/${PACKAGE}
           cd ${PACKAGE}
 
-          swiftly run swift build --swift-sdk "${ANDROID_EMULATOR_ARCH_TRIPLE}-unknown-linux-android${ANDROID_API}" --build-tests +"${SWIFT_TOOLCHAIN_VERSION}"
+          swiftly run swift build --swift-sdk "${ANDROID_EMULATOR_ARCH_TRIPLE}-unknown-linux-android${ANDROID_API}" --build-tests --static-swift-stdlib +"${SWIFT_TOOLCHAIN_VERSION}"
 
           adb push .build/debug/${PACKAGE}PackageTests.xctest /data/local/tmp/
           # copy up any test resources
@@ -240,9 +242,12 @@ jobs:
 
           # push potential dependent libraries
           adb push $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/*/sysroot/usr/lib/${ANDROID_EMULATOR_ARCH_TRIPLE}-linux-android/libc++_shared.so /data/local/tmp/
-          cd ~/Library/org.swift.swiftpm || cd ${XDG_CONFIG_HOME}/swiftpm || cd ~/.local/swiftpm || cd ~/.swiftpm
-          adb push swift-sdks/${SWIFT_ANDROID_SDK_VERSION}*.artifactbundle/swift-android/swift-resources/usr/lib/swift-${ANDROID_EMULATOR_ARCH_TRIPLE}/android/*.so /data/local/tmp/
-          cd -
+
+          # Since we are building with --static-swift-stdlib, we don't
+          # need to copy any of the other libraries
+          #cd ~/Library/org.swift.swiftpm || cd ${XDG_CONFIG_HOME}/swiftpm || cd ~/.local/swiftpm || cd ~/.swiftpm
+          #adb push swift-sdks/${SWIFT_ANDROID_SDK_VERSION}*.artifactbundle/swift-android/swift-resources/usr/lib/swift-${ANDROID_EMULATOR_ARCH_TRIPLE}/android/*.so /data/local/tmp/
+          #cd -
 
           adb shell ls /data/local/tmp/
 
@@ -275,11 +280,9 @@ jobs:
         run: ./run-tests.sh apple/swift-crypto
 
       - name: Run swift-nio tests
-        if: false
         run: ./run-tests.sh apple/swift-nio
 
       - name: Run swift-argument-parser tests
-        if: false
         run: ./run-tests.sh apple/swift-argument-parser
 
       - name: Android - Show Emulator Log
