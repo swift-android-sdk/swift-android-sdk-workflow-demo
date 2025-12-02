@@ -101,18 +101,20 @@ jobs:
       - name: Get Latest Toolchain Info
         run: |
           sdk_json=$(curl -fsSL "https://www.swift.org/api/v1/install/dev/main/android-sdk.json") || fatal "Failed to fetch android-sdk development snapshots"
+          download=$(echo "$sdk_json" | jq -r '.[0].download')
           snapshot_tag=$(echo "$sdk_json" | jq -r '.[0].dir')
           checksum=$(echo "$sdk_json" | jq -r '.[0].checksum')
 
           echo "SWIFT_TOOLCHAIN_VERSION=${snapshot_tag}" >> ${GITHUB_ENV}
           echo "SWIFT_ANDROID_SDK_VERSION=${snapshot_tag}" >> ${GITHUB_ENV}
+          echo "SWIFT_ANDROID_SDK_DOWNLOAD=${download}" >> ${GITHUB_ENV}
           echo "SWIFT_ANDROID_SDK_CHECKSUM=${checksum}" >> ${GITHUB_ENV}
 
       - name: Install Swift Host Toolchain
         run: swiftly install --use "${SWIFT_TOOLCHAIN_VERSION}"
 
       - name: Install Swift SDK for Android
-        run: swiftly run swift sdk install https://download.swift.org/development/android-sdk/${SWIFT_ANDROID_SDK_VERSION}/${SWIFT_ANDROID_SDK_VERSION}_android-0.1.artifactbundle.tar.gz --checksum ${SWIFT_ANDROID_SDK_CHECKSUM}
+        run: swiftly run swift sdk install https://download.swift.org/development/android-sdk/${SWIFT_ANDROID_SDK_VERSION}/${SWIFT_ANDROID_SDK_DOWNLOAD} --checksum ${SWIFT_ANDROID_SDK_CHECKSUM}
 
       - name: List Swift SDKs
         run: |
