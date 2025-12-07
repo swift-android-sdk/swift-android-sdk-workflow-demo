@@ -206,17 +206,17 @@ jobs:
           adb push $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/*/sysroot/usr/lib/${ANDROID_EMULATOR_ARCH_TRIPLE}-linux-android/libc++_shared.so /data/local/tmp/
           adb shell /data/local/tmp/hello
 
-      - run: ./android-ci.sh test apple/swift-toolchain-sqlite
+      - run: ./android-ci.sh test swiftlang/swift-toolchain-sqlite
 
-      - run: ./android-ci.sh test apple/swift-markdown
+      - run: ./android-ci.sh test swiftlang/swift-markdown
 
-      - run: ./android-ci.sh test apple/swift-tools-support-core
+      - run: ./android-ci.sh test swiftlang/swift-tools-support-core
 
-      - run: ./android-ci.sh test apple/swift-syntax
+      - run: ./android-ci.sh test swiftlang/swift-syntax
 
-      - run: ./android-ci.sh test apple/swift-subprocess
+      - run: ./android-ci.sh test swiftlang/swift-subprocess
 
-      - run: ./android-ci.sh test apple/swift-java
+      - run: ./android-ci.sh test swiftlang/swift-java
 
       - run: ./android-ci.sh test apple/swift-numerics
 
