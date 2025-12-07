@@ -98,7 +98,7 @@ jobs:
       - name: Create and Launch Android Emulator
         run: |
           EMULATOR_SPEC="system-images;android-${ANDROID_API};default;${ANDROID_EMULATOR_ARCH}"
-          EMULATOR_NAME="emulator-${ANDROID_API}"
+          EMULATOR_NAME="swiftemu"
           sdkmanager --list_installed
           yes | sdkmanager --licenses > /dev/null
           sdkmanager --install "${EMULATOR_SPEC}" "emulator" "platform-tools" "platforms;android-${ANDROID_API}"
