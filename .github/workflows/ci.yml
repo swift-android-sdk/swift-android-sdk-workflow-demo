@@ -15,22 +15,29 @@ jobs:
         include:
           - name: 'macOS 15 X64 API 28'
             os: 'macos-15-intel'
-            ANDROID_API: 35
+            ANDROID_API: 28
             NDK_VERSION: 'r27d'
             EMULATOR_ARCH: 'x86_64'
             EMULATOR_ARCH_TRIPLE: 'x86_64'
 
-          #- name: 'Ubuntu X64 API 28'
-          #  os: 'ubuntu-latest'
-          #  ANDROID_API: 28
-          #  NDK_VERSION: 'r28c'
-          #  EMULATOR_ARCH: 'x86_64'
-          #  EMULATOR_ARCH_TRIPLE: 'x86_64'
+          - name: 'Ubuntu X64 API 28'
+            os: 'ubuntu-latest'
+            ANDROID_API: 28
+            NDK_VERSION: 'r28c'
+            EMULATOR_ARCH: 'x86_64'
+            EMULATOR_ARCH_TRIPLE: 'x86_64'
 
           - name: 'Ubuntu X64 API 35'
             os: 'ubuntu-latest'
             ANDROID_API: 35
             NDK_VERSION: 'r29'
+            EMULATOR_ARCH: 'x86_64'
+            EMULATOR_ARCH_TRIPLE: 'x86_64'
+
+          - name: 'macOS 15 X64 API 36'
+            os: 'macos-15-intel'
+            ANDROID_API: 36
+            NDK_VERSION: 'r27d'
             EMULATOR_ARCH: 'x86_64'
             EMULATOR_ARCH_TRIPLE: 'x86_64'
 
@@ -98,12 +105,11 @@ jobs:
 
       - name: Android Emulator - Create
         run: |
-          which avdmanager
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --list_installed
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-${ANDROID_API};default;x86_64" 
-          echo "no" | avdmanager create avd -n testing -k "system-images;android-${ANDROID_API};default;x86_64" --device "${ANDROID_PROFILE}"
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-${ANDROID_API};default;${EMULATOR_ARCH}" 
+          echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager create avd -n "${ANDROID_EMULATOR_NAME}" -k "system-images;android-${ANDROID_API};default;${EMULATOR_ARCH}" --device "${ANDROID_PROFILE}"
           $ANDROID_HOME/emulator/emulator -list-avds
-          nohup emulator -memory 4096 -avd testing -wipe-data -no-window -no-snapshot -noaudio -no-boot-anim 2>&1 > emulator.log &
+          nohup $ANDROID_HOME/emulator/emulator -memory 4096 -avd "${ANDROID_EMULATOR_NAME}" -wipe-data -no-window -no-snapshot -noaudio -no-boot-anim 2>&1 > emulator.log &
 
       #- name: Android - Find AVDs
       #  run: find ~/ -type d -name '*.avd'
