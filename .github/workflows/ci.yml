@@ -57,17 +57,6 @@ jobs:
           #  EMULATOR_ARCH_TRIPLE: 'aarch64'
 
     runs-on: ${{ matrix.os }}
-    env:
-      ANDROID_API: ${{ matrix.ANDROID_API }}
-      ANDROID_EMULATOR_ARCH: ${{ matrix.EMULATOR_ARCH }}
-      ANDROID_EMULATOR_ARCH_TRIPLE: ${{ matrix.EMULATOR_ARCH_TRIPLE }}
-      ANDROID_TARGET: 'default'
-      #ANDROID_BUILD_TOOLS_VERSION: 36.0.0
-      ANDROID_BUILD_TOOLS_VERSION: 'latest'
-      BUILD_TOOLS_VERSION: "35.0.0"
-      ANDROID_PROFILE: "Nexus 10"
-      ANDROID_CHANNEL: "3"
-      ANDROID_NDK_VERSION: "${{ matrix.NDK_VERSION }}"
     steps:
       - name: Free Disk Space
         if: runner.os == 'Linux'
@@ -79,14 +68,32 @@ jobs:
 
       - name: Setup Android Environment
         run: |
-          echo "$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/emulator:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/${{ env.ANDROID_BUILD_TOOLS_VERSION }}" >> $GITHUB_PATH
-          # needed for Linux or else the emulator will be created in
-          # ~/.android/avd but it will be sought in ~/.config/.android/avd
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
+          echo "$ANDROID_HOME/emulator" >> $GITHUB_PATH
+          echo "$ANDROID_HOME/tools" >> $GITHUB_PATH
+          echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
+          echo "$ANDROID_HOME/build-tools/latest" >> $GITHUB_PATH
+
+          echo "ANDROID_API=${{ matrix.ANDROID_API }}" >> $GITHUB_ENV
+          echo "ANDROID_EMULATOR_ARCH=${{ matrix.EMULATOR_ARCH }}" >> $GITHUB_ENV
+          echo "ANDROID_EMULATOR_ARCH_TRIPLE=${{ matrix.EMULATOR_ARCH_TRIPLE }}" >> $GITHUB_ENV
+          echo "ANDROID_TARGET=default" >> $GITHUB_ENV
+          echo "ANDROID_PROFILE="Nexus 10"" >> $GITHUB_ENV
+          echo "ANDROID_CHANNEL=3" >> $GITHUB_ENV
+          echo "ANDROID_NDK_VERSION=${{ matrix.NDK_VERSION }}" >> $GITHUB_ENV
+
           if [[ "${RUNNER_OS}" == "Linux" ]]; then
+            # needed for Linux or else the emulator will be created in
+            # ~/.android/avd but it will be sought in ~/.config/.android/avd
             echo "ANDROID_AVD_HOME=${XDG_CONFIG_HOME:-$HOME}/.android/avd" >> $GITHUB_ENV
+
+            # enable KVM on Linux for emulator performance
+            echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+            sudo udevadm control --reload-rules
+            sudo udevadm trigger --name-match=kvm
           fi
 
-      - name: Android Emulator - Create
+      - name: Create and Launch Android Emulator
         run: |
           sdkmanager --list_installed
           yes | sdkmanager --licenses > /dev/null
@@ -95,16 +102,8 @@ jobs:
           sdkmanager --install "${EMULATOR_SPEC}" "emulator"
           avdmanager create avd -n "${EMULATOR_NAME}" -k "${EMULATOR_SPEC}" --device "${ANDROID_PROFILE}"
           emulator -list-avds
+          # launch the emulator in the background; we will cat the log at the end
           nohup emulator -memory 4096 -avd "${EMULATOR_NAME}" -wipe-data -no-window -no-snapshot -noaudio -no-boot-anim 2>&1 > emulator.log &
-
-      #- name: Android - Find AVDs
-      #  run: find ~/ -type d -name '*.avd'
-
-      #- name: Android - List AVDs
-      #  run: emulator -list-avds
-
-      #- name: Android - Boot
-      #  run: nohup emulator -memory 4096 -avd "${ANDROID_EMULATOR_NAME}" -wipe-data -no-window -no-snapshot -noaudio -no-boot-anim 2>&1 > emulator.log &
 
       - name: Install Prerequisites
         run: |
@@ -186,22 +185,12 @@ jobs:
           swiftly run swift build --swift-sdk "${ANDROID_EMULATOR_ARCH_TRIPLE}-unknown-linux-android${ANDROID_API}" --static-swift-stdlib
           file .build/debug/hello
 
-      - name: Enable KVM
-        if: runner.os == 'Linux'
-        run: |
-          if [[ "${RUNNER_ARCH}" == "X64" ]]; then
-            echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-            sudo udevadm control --reload-rules
-            sudo udevadm trigger --name-match=kvm
-          fi
-
-      - name: ADB Wait For Device
+      - name: Wait for Android Emulator
         run: adb wait-for-any-device
         timeout-minutes: 5
 
       - name: Check Android Emulator
-        run: |
-          adb shell 'echo Hello Android!'
+        run: adb shell 'echo Hello Android!'
 
       - name: Run Swift Executable on Android Emulator
         run: |
