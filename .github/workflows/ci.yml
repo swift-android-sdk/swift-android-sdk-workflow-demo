@@ -97,11 +97,11 @@ jobs:
 
       - name: Create and Launch Android Emulator
         run: |
+          EMULATOR_SPEC="system-images;android-${ANDROID_API};default;${ANDROID_EMULATOR_ARCH}"
+          EMULATOR_NAME="emulator-${ANDROID_API}"
           sdkmanager --list_installed
           yes | sdkmanager --licenses > /dev/null
-          EMULATOR_NAME="emulator-${ANDROID_API}"
-          EMULATOR_SPEC="system-images;android-${ANDROID_API};default;${ANDROID_EMULATOR_ARCH}"
-          sdkmanager --install "${EMULATOR_SPEC}"
+          sdkmanager --install "${EMULATOR_SPEC}" "emulator" "platform-tools" "platforms;android-${ANDROID_API}"
           avdmanager create avd -n "${EMULATOR_NAME}" -k "${EMULATOR_SPEC}" --device "${ANDROID_PROFILE}"
           emulator -list-avds
           # launch the emulator in the background; we will cat the log at the end
