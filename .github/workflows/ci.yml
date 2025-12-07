@@ -104,8 +104,9 @@ jobs:
           sdkmanager --install "${EMULATOR_SPEC}" "emulator" "platform-tools" "platforms;android-${ANDROID_API}"
           avdmanager create avd -n "${EMULATOR_NAME}" -k "${EMULATOR_SPEC}" --device "${ANDROID_PROFILE}"
           emulator -list-avds
-          # launch the emulator in the background; we will cat the log at the end
+          # launch the emulator in the background; we will cat the logs at the end
           nohup emulator -memory 4096 -avd "${EMULATOR_NAME}" -wipe-data -no-window -no-snapshot -noaudio -no-boot-anim 2>&1 > emulator.log &
+          adb logcat 2>&1 > logcat.log &
 
       - name: Install Prerequisites
         run: |
@@ -178,6 +179,8 @@ jobs:
         run: |
           cd ~/Library/org.swift.swiftpm || cd ${XDG_CONFIG_HOME}/swiftpm || cd ~/.local/swiftpm || cd ~/.swiftpm
           ./swift-sdks/${SWIFT_ANDROID_SDK_VERSION}*.artifactbundle/swift-android/scripts/setup-android-sdk.sh
+          cd ./swift-sdks/${SWIFT_ANDROID_SDK_VERSION}*.artifactbundle
+          echo "SWIFT_ANDROID_SDK_HOME=${PWD}" >> $GITHUB_ENV
 
       - name: Build Swift Executable for Android
         run: |
@@ -211,24 +214,27 @@ jobs:
           git clone https://github.com/${ORG}/${PACKAGE}
           cd ${PACKAGE}
 
-          swiftly run swift build --swift-sdk "${ANDROID_EMULATOR_ARCH_TRIPLE}-unknown-linux-android${ANDROID_API}" --build-tests +"${SWIFT_TOOLCHAIN_VERSION}"
+          TRIPLE="${ANDROID_EMULATOR_ARCH_TRIPLE}-unknown-linux-android${ANDROID_API}"
+          swiftly run swift build --swift-sdk "${TRIPLE}" --build-tests +"${SWIFT_TOOLCHAIN_VERSION}"
 
-          adb push .build/debug/${PACKAGE}PackageTests.xctest /data/local/tmp/
-          # copy up any test resources
-          adb push .build/debug/*.resources /data/local/tmp/ || true
+          STAGING=".build/android-test-${PACKAGE}/"
+          rm -rf "${STAGING}"
+          mkdir "${STAGING}"
 
-          # push potential dependent libraries
-          adb push $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/*/sysroot/usr/lib/${ANDROID_EMULATOR_ARCH_TRIPLE}-linux-android/libc++_shared.so /data/local/tmp/
+          cp -a .build/"${TRIPLE}"/"${PACKAGE}"PackageTests.xctest "${STAGING}"
+          cp -a .build/"${TRIPLE}"/*.resources "${STAGING}"
+          # for the common case of tests referencing their own resources
+          cp -a Tests "${STAGING}"
+          cp -a $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/*/sysroot/usr/lib/${ANDROID_EMULATOR_ARCH_TRIPLE}-linux-android/libc++_shared.so "${STAGING}"
+          cp -a "${SWIFT_ANDROID_SDK_HOME}"/swift-android/swift-resources/usr/lib/swift-${ANDROID_EMULATOR_ARCH_TRIPLE}/android/*.so /data/local/tmp/
 
-          # Since we are building with --static-swift-stdlib, we don't
-          # need to copy any of the other libraries
-          cd ~/Library/org.swift.swiftpm || cd ${XDG_CONFIG_HOME}/swiftpm || cd ~/.local/swiftpm || cd ~/.swiftpm
-          adb push swift-sdks/${SWIFT_ANDROID_SDK_VERSION}*.artifactbundle/swift-android/swift-resources/usr/lib/swift-${ANDROID_EMULATOR_ARCH_TRIPLE}/android/*.so /data/local/tmp/
-          cd -
+          cd .build/
+          STAGING_BASE=$(basename "${STAGING}")
+          zip -r "${STAGING_BASE}.zip" "${STAGING_BASE}"
 
-          adb shell ls /data/local/tmp/
-
-          adb shell /data/local/tmp/${PACKAGE}PackageTests.xctest
+          adb push "${STAGING_BASE}.zip" /data/local/tmp/
+          adb shell unzip -d /data/local/tmp/ /data/local/tmp/"${STAGING_BASE}.zip"
+          adb shell /data/local/tmp/"${STAGING_BASE}"/"${PACKAGE}"PackageTests.xctest
           EOF
 
           chmod +x run-tests.sh
@@ -252,8 +258,6 @@ jobs:
         run: ./run-tests.sh apple/swift-system
 
       - name: Run swift-crypto tests
-        # needs: Tests/CryptoExtrasVectors/rfc-7914-scrypt.txt
-        if: false
         run: ./run-tests.sh apple/swift-crypto
 
       - name: Run swift-nio tests
@@ -266,7 +270,11 @@ jobs:
         if: false
         run: ./run-tests.sh apple/swift-argument-parser
 
-      - name: Android - Show Emulator Log
+      - name: Show Android Emulator Log
         if: always()
-        run: cat emulator.log || true
+        run: cat emulator.log
+
+      - name: Show Android Logcat Output
+        if: always()
+        run: cat logcat.log
 
