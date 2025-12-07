@@ -78,7 +78,7 @@ jobs:
           echo "ANDROID_EMULATOR_ARCH=${{ matrix.EMULATOR_ARCH }}" >> $GITHUB_ENV
           echo "ANDROID_EMULATOR_ARCH_TRIPLE=${{ matrix.EMULATOR_ARCH_TRIPLE }}" >> $GITHUB_ENV
           echo "ANDROID_TARGET=default" >> $GITHUB_ENV
-          echo "ANDROID_PROFILE="Nexus 10"" >> $GITHUB_ENV
+          echo "ANDROID_PROFILE='Nexus 10'" >> $GITHUB_ENV
           echo "ANDROID_CHANNEL=3" >> $GITHUB_ENV
           echo "ANDROID_NDK_VERSION=${{ matrix.NDK_VERSION }}" >> $GITHUB_ENV
 
@@ -87,7 +87,8 @@ jobs:
             # ~/.android/avd but it will be sought in ~/.config/.android/avd
             echo "ANDROID_AVD_HOME=${XDG_CONFIG_HOME:-$HOME}/.android/avd" >> $GITHUB_ENV
 
-            # enable KVM on Linux for emulator performance
+            # enable KVM on Linux, else error on emulator launch:
+            # CPU acceleration status: This user doesn't have permissions to use KVM (/dev/kvm).
             echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
             sudo udevadm control --reload-rules
             sudo udevadm trigger --name-match=kvm
