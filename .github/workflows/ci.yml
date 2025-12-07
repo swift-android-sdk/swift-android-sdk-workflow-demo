@@ -234,7 +234,17 @@ jobs:
 
           cd -
 
-          adb shell "cd /data/local/tmp/${STAGING} && ./${PACKAGE}PackageTests.xctest"
+          TEST_CMD="./${PACKAGE}PackageTests.xctest"
+          TEST_SHELL="cd /data/local/tmp/${STAGING}"
+          TEST_SHELL="${TEST_SHELL} && ${TEST_CMD}"
+
+          # Run a second time with the Swift Testing library
+          # We additionally need to handle the special exit code EXIT_NO_TESTS_FOUND (69 on Android),
+          # which can happen when the tests link to Testing, but no tests are executed
+          # see: https://github.com/swiftlang/swift-package-manager/blob/1b593469e8ad3daf2cc10e798340bd2de68c402d/Sources/Commands/SwiftTestCommand.swift#L1542
+          TEST_SHELL="${TEST_SHELL} && ${TEST_CMD} --testing-library swift-testing && [ \$? -eq 0 ] || [ \$? -eq 69 ]"
+
+          adb shell "${TEST_SHELL}"
           EOF
 
           chmod +x run-tests.sh
@@ -258,6 +268,8 @@ jobs:
         run: ./run-tests.sh apple/swift-system
 
       - name: Run swift-crypto tests
+        # references Tests/ file paths by absolute filename
+        if: false
         run: ./run-tests.sh apple/swift-crypto
 
       - name: Run swift-nio tests
