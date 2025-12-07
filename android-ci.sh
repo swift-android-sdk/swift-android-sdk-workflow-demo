@@ -31,7 +31,9 @@ rm -rf .build/"${STAGING}"
 mkdir .build/"${STAGING}"
 
 # for the common case of tests referencing their own files as hardwired resource paths
-cp -a Tests .build/"${STAGING}"
+if [[ -d Tests ]]; then
+    cp -a Tests .build/"${STAGING}"
+fi
 
 cd .build/
 cp -a debug/*.xctest "${STAGING}"
