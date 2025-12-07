@@ -27,17 +27,17 @@ jobs:
             EMULATOR_ARCH: 'x86_64'
             EMULATOR_ARCH_TRIPLE: 'x86_64'
 
+          - name: 'macOS 15 X64 API 30'
+            os: 'macos-15-intel'
+            ANDROID_API: 30
+            NDK_VERSION: 'r27d'
+            EMULATOR_ARCH: 'x86_64'
+            EMULATOR_ARCH_TRIPLE: 'x86_64'
+
           - name: 'Ubuntu X64 API 35'
             os: 'ubuntu-latest'
             ANDROID_API: 35
             NDK_VERSION: 'r29'
-            EMULATOR_ARCH: 'x86_64'
-            EMULATOR_ARCH_TRIPLE: 'x86_64'
-
-          - name: 'macOS 15 X64 API 36'
-            os: 'macos-15-intel'
-            ANDROID_API: 36
-            NDK_VERSION: 'r27d'
             EMULATOR_ARCH: 'x86_64'
             EMULATOR_ARCH_TRIPLE: 'x86_64'
 
@@ -92,7 +92,7 @@ jobs:
           yes | sdkmanager --licenses > /dev/null
           EMULATOR_NAME="emulator-${ANDROID_API}"
           EMULATOR_SPEC="system-images;android-${ANDROID_API};default;${ANDROID_EMULATOR_ARCH}"
-          sdkmanager --install "${EMULATOR_SPEC}"
+          sdkmanager --install "${EMULATOR_SPEC}" "emulator"
           avdmanager create avd -n "${EMULATOR_NAME}" -k "${EMULATOR_SPEC}" --device "${ANDROID_PROFILE}"
           emulator -list-avds
           nohup emulator -memory 4096 -avd "${EMULATOR_NAME}" -wipe-data -no-window -no-snapshot -noaudio -no-boot-anim 2>&1 > emulator.log &
