@@ -78,7 +78,7 @@ jobs:
           echo "ANDROID_EMULATOR_ARCH=${{ matrix.EMULATOR_ARCH }}" >> $GITHUB_ENV
           echo "ANDROID_EMULATOR_ARCH_TRIPLE=${{ matrix.EMULATOR_ARCH_TRIPLE }}" >> $GITHUB_ENV
           echo "ANDROID_TARGET=default" >> $GITHUB_ENV
-          echo "ANDROID_PROFILE='Nexus 10'" >> $GITHUB_ENV
+          echo "ANDROID_PROFILE=Nexus 10" >> $GITHUB_ENV
           echo "ANDROID_CHANNEL=3" >> $GITHUB_ENV
           echo "ANDROID_NDK_VERSION=${{ matrix.NDK_VERSION }}" >> $GITHUB_ENV
 
