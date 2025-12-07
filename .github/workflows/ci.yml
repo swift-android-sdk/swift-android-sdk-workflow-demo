@@ -206,33 +206,38 @@ jobs:
           adb push $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/*/sysroot/usr/lib/${ANDROID_EMULATOR_ARCH_TRIPLE}-linux-android/libc++_shared.so /data/local/tmp/
           adb shell /data/local/tmp/hello
 
-      - name: Run swift-numerics tests
-        run: ./android-ci.sh test apple/swift-numerics
+      - run: ./android-ci.sh test apple/swift-toolchain-sqlite
 
-      - name: Run swift-algorithms tests
-        run: ./android-ci.sh test apple/swift-algorithms
+      - run: ./android-ci.sh test apple/swift-markdown
 
-      - name: Run swift-atomics tests
-        run: ./android-ci.sh test apple/swift-atomics
+      - run: ./android-ci.sh test apple/swift-tools-support-core
 
-      - name: Run swift-collections tests
-        run: ./android-ci.sh test apple/swift-collections
+      - run: ./android-ci.sh test apple/swift-syntax
 
-      - name: Run swift-system tests
-        # build-only: https://github.com/apple/swift-system/pull/272
-        run: ./android-ci.sh build apple/swift-system
+      - run: ./android-ci.sh test apple/swift-subprocess
 
-      - name: Run swift-crypto tests
-        # build-only: tests references Tests/ file paths by absolute filename
-        run: ./android-ci.sh build apple/swift-crypto
+      - run: ./android-ci.sh test apple/swift-java
 
-      - name: Run swift-nio tests
-        run: ./android-ci.sh build apple/swift-nio
+      - run: ./android-ci.sh test apple/swift-numerics
 
-      - name: Run swift-argument-parser tests
-        # needs local files:
-        # error: MathExampleTests.testMath_AddHelp : failed - No executable at '/data/local/tmp/math'.
-        run: ./android-ci.sh build apple/swift-argument-parser
+      - run: ./android-ci.sh test apple/swift-algorithms
+
+      - run: ./android-ci.sh test apple/swift-atomics
+
+      # build-only: tests work, but they take a very long time
+      - run: ./android-ci.sh build apple/swift-collections
+
+      # build-only: https://github.com/apple/swift-system/pull/272
+      - run: ./android-ci.sh build apple/swift-system
+
+      # build-only: tests references Tests/ file paths by absolute filename
+      - run: ./android-ci.sh build apple/swift-crypto
+
+      - run: ./android-ci.sh build apple/swift-nio
+
+      # build-only, since tests needs local files:
+      # error: MathExampleTests.testMath_AddHelp : failed - No executable at '/data/local/tmp/math'.
+      - run: ./android-ci.sh build apple/swift-argument-parser
 
       - name: Show Android Emulator Log
         if: always()
