@@ -217,22 +217,26 @@ jobs:
           TRIPLE="${ANDROID_EMULATOR_ARCH_TRIPLE}-unknown-linux-android${ANDROID_API}"
           swiftly run swift build --swift-sdk "${TRIPLE}" --build-tests +"${SWIFT_TOOLCHAIN_VERSION}"
 
-          STAGING=".build/android-test-${PACKAGE}/"
-          rm -rf "${STAGING}"
-          mkdir "${STAGING}"
+          cd .build
+          STAGING="android-test-${PACKAGE}"
+          rm -rf .build/"${STAGING}"
+          mkdir .build/"${STAGING}"
 
-          cp -a .build/"${TRIPLE}"/"${PACKAGE}"PackageTests.xctest "${STAGING}"
-          cp -a .build/"${TRIPLE}"/*.resources "${STAGING}"
-          # for the common case of tests referencing their own resources
-          cp -a Tests "${STAGING}"
-          cp -a $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/*/sysroot/usr/lib/${ANDROID_EMULATOR_ARCH_TRIPLE}-linux-android/libc++_shared.so "${STAGING}"
-          cp -a "${SWIFT_ANDROID_SDK_HOME}"/swift-android/swift-resources/usr/lib/swift-${ANDROID_EMULATOR_ARCH_TRIPLE}/android/*.so /data/local/tmp/
+          # for the common case of tests referencing their own files as hardwired resource paths
+          cp -a Tests .build/"${STAGING}"
 
           cd .build/
-          STAGING_BASE=$(basename "${STAGING}")
-          zip -r "${STAGING_BASE}.zip" "${STAGING_BASE}"
+          cp -a debug/*.xctest "${STAGING}"
+          cp -a debug/*.resources "${STAGING}" || true
+          cp -a ${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/*/sysroot/usr/lib/${ANDROID_EMULATOR_ARCH_TRIPLE}-linux-android/libc++_shared.so "${STAGING}"
+          cp -a ${SWIFT_ANDROID_SDK_HOME}/swift-android/swift-resources/usr/lib/swift-${ANDROID_EMULATOR_ARCH_TRIPLE}/android/*.so "${STAGING}"
 
-          adb push "${STAGING_BASE}.zip" /data/local/tmp/
+          zip -r "${STAGING}.zip" "${STAGING}"
+
+          adb push "${STAGING}.zip" /data/local/tmp/
+
+          cd -
+
           adb shell unzip -d /data/local/tmp/ /data/local/tmp/"${STAGING_BASE}.zip"
           adb shell /data/local/tmp/"${STAGING_BASE}"/"${PACKAGE}"PackageTests.xctest
           EOF
