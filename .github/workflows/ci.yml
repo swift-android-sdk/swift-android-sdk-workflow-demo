@@ -230,14 +230,11 @@ jobs:
           cp -a ${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/*/sysroot/usr/lib/${ANDROID_EMULATOR_ARCH_TRIPLE}-linux-android/libc++_shared.so "${STAGING}"
           cp -a ${SWIFT_ANDROID_SDK_HOME}/swift-android/swift-resources/usr/lib/swift-${ANDROID_EMULATOR_ARCH_TRIPLE}/android/*.so "${STAGING}"
 
-          zip -r "${STAGING}.zip" "${STAGING}"
-
-          adb push "${STAGING}.zip" /data/local/tmp/
+          adb push ${STAGING} /data/local/tmp/
 
           cd -
 
-          adb shell unzip -d /data/local/tmp/ /data/local/tmp/"${STAGING_BASE}.zip"
-          adb shell /data/local/tmp/"${STAGING_BASE}"/"${PACKAGE}"PackageTests.xctest
+          adb shell "cd /data/local/tmp/${STAGING} && ./${PACKAGE}PackageTests.xctest"
           EOF
 
           chmod +x run-tests.sh
