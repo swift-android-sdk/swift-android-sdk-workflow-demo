@@ -217,7 +217,6 @@ jobs:
           TRIPLE="${ANDROID_EMULATOR_ARCH_TRIPLE}-unknown-linux-android${ANDROID_API}"
           swiftly run swift build --swift-sdk "${TRIPLE}" --build-tests +"${SWIFT_TOOLCHAIN_VERSION}"
 
-          cd .build
           STAGING="android-test-${PACKAGE}"
           rm -rf .build/"${STAGING}"
           mkdir .build/"${STAGING}"
