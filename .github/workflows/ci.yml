@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
   pull_request:
   schedule:
-    - cron: '0 1,7,13,20 * * *'
+    - cron: '0 13 * * *'
 
 jobs:
   install-sdk:
@@ -15,17 +15,17 @@ jobs:
         include:
           - name: 'macOS 15 X64 API 28'
             os: 'macos-15-intel'
-            ANDROID_API: 28
+            ANDROID_API: 35
             NDK_VERSION: 'r27d'
             EMULATOR_ARCH: 'x86_64'
             EMULATOR_ARCH_TRIPLE: 'x86_64'
 
-          - name: 'Ubuntu X64 API 28'
-            os: 'ubuntu-latest'
-            ANDROID_API: 28
-            NDK_VERSION: 'r28c'
-            EMULATOR_ARCH: 'x86_64'
-            EMULATOR_ARCH_TRIPLE: 'x86_64'
+          #- name: 'Ubuntu X64 API 28'
+          #  os: 'ubuntu-latest'
+          #  ANDROID_API: 28
+          #  NDK_VERSION: 'r28c'
+          #  EMULATOR_ARCH: 'x86_64'
+          #  EMULATOR_ARCH_TRIPLE: 'x86_64'
 
           - name: 'Ubuntu X64 API 35'
             os: 'ubuntu-latest'
@@ -70,6 +70,38 @@ jobs:
           sudo rm -rf /opt/ghc
           sudo rm -rf "/usr/local/share/boost"
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+
+      - name: Android SDKs - list installed SDKs
+        run: sdkmanager --list_installed
+
+      - name: Android SDKs - setup environment
+        if: false
+        run: yes y | sdkmanager --licenses > /dev/null
+
+      - name: Android SKDs - setup build tools
+        if: false
+        run: sdkmanager --install "build-tools;${BUILD_TOOLS_VERSION}" platform-tools "platforms;android-${ANDROID_API}" --channel="${ANDROID_CHANNEL}"
+
+      - name: Android SKDs - setup emulator
+        if: false
+        run: sdkmanager --install emulator --channel="${ANDROID_CHANNEL}"
+
+      - name: Android Emulator - download required images
+        if: false
+        run: sdkmanager --install "system-images;android-${ANDROID_API};${ANDROID_TARGET};${ANDROID_EMULATOR_ARCH}" --channel="${ANDROID_CHANNEL}"
+
+      - name: Android Emulator - Create
+        run: avdmanager --verbose create avd --force -n "${ANDROID_EMULATOR_NAME}" --device "${ANDROID_PROFILE}" --abi "${ANDROID_TARGET}/${ANDROID_EMULATOR_ARCH}" --package "system-images;android-${ANDROID_API};${ANDROID_TARGET};${ANDROID_EMULATOR_ARCH}" --sdcard 512M
+
+      #- name: Android - Find AVDs
+      #  run: find ~/ -type d -name '*.avd'
+
+      #- name: Android - List AVDs
+      #  run: emulator -list-avds
+
+      - name: Android - Boot
+        run: nohup emulator -memory 4096 -avd "${ANDROID_EMULATOR_NAME}" -wipe-data -no-window -no-snapshot -noaudio -no-boot-anim 2>&1 > emulator.log &
+
 
       - name: Install Prerequisites
         run: |
@@ -168,33 +200,6 @@ jobs:
             sudo udevadm control --reload-rules
             sudo udevadm trigger --name-match=kvm
           fi
-
-      - name: Android SDKs - list installed SDKs
-        run: sdkmanager --list_installed
-
-      - name: Android SDKs - setup environment
-        run: yes y | sdkmanager --licenses > /dev/null
-
-      - name: Android SKDs - setup build tools
-        run: sdkmanager --install "build-tools;${BUILD_TOOLS_VERSION}" platform-tools "platforms;android-${ANDROID_API}" --channel="${ANDROID_CHANNEL}"
-
-      - name: Android SKDs - setup emulator
-        run: sdkmanager --install emulator --channel="${ANDROID_CHANNEL}"
-
-      - name: Android Emulator - download required images
-        run: sdkmanager --install "system-images;android-${ANDROID_API};${ANDROID_TARGET};${ANDROID_EMULATOR_ARCH}" --channel="${ANDROID_CHANNEL}"
-
-      - name: Android Emulator - Create
-        run: avdmanager --verbose create avd --force -n "${ANDROID_EMULATOR_NAME}" --device "${ANDROID_PROFILE}" --abi "${ANDROID_TARGET}/${ANDROID_EMULATOR_ARCH}" --package "system-images;android-${ANDROID_API};${ANDROID_TARGET};${ANDROID_EMULATOR_ARCH}" --sdcard 512M
-
-      #- name: Android - Find AVDs
-      #  run: find ~/ -type d -name '*.avd'
-
-      #- name: Android - List AVDs
-      #  run: emulator -list-avds
-
-      - name: Android - Boot
-        run: nohup emulator -memory 4096 -avd "${ANDROID_EMULATOR_NAME}" -wipe-data -no-window -no-snapshot -noaudio -no-boot-anim 2>&1 > emulator.log &
 
       - name: ADB Wait For Device
         run: adb wait-for-any-device
