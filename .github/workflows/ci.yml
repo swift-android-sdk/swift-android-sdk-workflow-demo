@@ -169,6 +169,9 @@ jobs:
             sudo udevadm trigger --name-match=kvm
           fi
 
+      - name: Android SDKs - list installed SDKs
+        run: sdkmanager --list_installed
+
       - name: Android SDKs - setup environment
         run: yes y | sdkmanager --licenses > /dev/null
 
