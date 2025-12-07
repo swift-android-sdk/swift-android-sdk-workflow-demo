@@ -81,8 +81,9 @@ jobs:
       - name: Android Emulator - Create
         run: |
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --list_installed
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-${ANDROID_API};default;${EMULATOR_ARCH}" --channel=3
-          echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager create avd -n "${ANDROID_EMULATOR_NAME}" -k "system-images;android-${ANDROID_API};default;${EMULATOR_ARCH}" --device "${ANDROID_PROFILE}"
+          EMULATOR_SPEC="system-images;android-${ANDROID_API};default;${ANDROID_EMULATOR_ARCH}"
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "${EMULATOR_SPEC}" --channel=3
+          echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager create avd -n "${ANDROID_EMULATOR_NAME}" -k "${EMULATOR_SPEC}" --device "${ANDROID_PROFILE}"
           $ANDROID_HOME/emulator/emulator -list-avds
           nohup $ANDROID_HOME/emulator/emulator -memory 4096 -avd "${ANDROID_EMULATOR_NAME}" -wipe-data -no-window -no-snapshot -noaudio -no-boot-anim 2>&1 > emulator.log &
 
