@@ -204,18 +204,36 @@ jobs:
           adb push $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/*/sysroot/usr/lib/${ANDROID_EMULATOR_ARCH_TRIPLE}-linux-android/libc++_shared.so /data/local/tmp/
           adb shell /data/local/tmp/hello
 
-      - name: Create run-tests script
+      - name: Create android-ci script
         run: |
-          cat > run-tests.sh << "EOF"
+          cat > android-ci.sh << "EOF"
           #!/bin/bash -ex
-          ORG=$(echo "${1}" | cut -d '/' -f 1)
-          PACKAGE=$(echo "${1}" | cut -d '/' -f 2)
+
+          if [[ -z "${2}" ]]; then
+            echo "$0: Usage: $0 build/test org/package
+            exit 1
+          fi
+
+          ACT=${1}
+          ORG=$(echo "${2}" | cut -d '/' -f 1)
+          PACKAGE=$(echo "${2}" | cut -d '/' -f 2)
 
           git clone https://github.com/${ORG}/${PACKAGE}
           cd ${PACKAGE}
 
           TRIPLE="${ANDROID_EMULATOR_ARCH_TRIPLE}-unknown-linux-android${ANDROID_API}"
           swiftly run swift build --swift-sdk "${TRIPLE}" --build-tests +"${SWIFT_TOOLCHAIN_VERSION}"
+
+          if [[ "${ACT}" == "build" ]]; then
+            # build-only, not test
+            exit 0
+          fi
+
+          if [[ "${ACT}" != "test" ]]; then
+            # build-only, not test
+            echo "$0: Usage: $0 build/test org/package
+            exit 1
+          fi
 
           STAGING="android-test-${PACKAGE}"
           rm -rf .build/"${STAGING}"
@@ -247,40 +265,36 @@ jobs:
           adb shell "${TEST_SHELL}"
           EOF
 
-          chmod +x run-tests.sh
-          cat run-tests.sh
-
-      - name: Run swift-collections tests
-        # too slow
-        if: false
-        run: ./run-tests.sh apple/swift-collections
+          chmod +x android-ci.sh
+          cat android-ci.sh
 
       - name: Run swift-numerics tests
-        run: ./run-tests.sh apple/swift-numerics
+        run: ./android-ci.sh test apple/swift-numerics
 
       - name: Run swift-algorithms tests
-        run: ./run-tests.sh apple/swift-algorithms
+        run: ./android-ci.sh test apple/swift-algorithms
 
       - name: Run swift-atomics tests
-        run: ./run-tests.sh apple/swift-atomics
+        run: ./android-ci.sh test apple/swift-atomics
+
+      - name: Run swift-collections tests
+        run: ./android-ci.sh test apple/swift-collections
 
       - name: Run swift-system tests
-        run: ./run-tests.sh apple/swift-system
+        # build-only: https://github.com/apple/swift-system/pull/272
+        run: ./android-ci.sh build apple/swift-system
 
       - name: Run swift-crypto tests
-        # references Tests/ file paths by absolute filename
-        if: false
-        run: ./run-tests.sh apple/swift-crypto
+        # build-only: tests references Tests/ file paths by absolute filename
+        run: ./android-ci.sh build apple/swift-crypto
 
       - name: Run swift-nio tests
-        if: false
-        run: ./run-tests.sh apple/swift-nio
+        run: ./android-ci.sh build apple/swift-nio
 
       - name: Run swift-argument-parser tests
         # needs local files:
         # error: MathExampleTests.testMath_AddHelp : failed - No executable at '/data/local/tmp/math'.
-        if: false
-        run: ./run-tests.sh apple/swift-argument-parser
+        run: ./android-ci.sh build apple/swift-argument-parser
 
       - name: Show Android Emulator Log
         if: always()
