@@ -80,10 +80,6 @@ jobs:
             echo "ANDROID_AVD_HOME=${XDG_CONFIG_HOME:-$HOME}/.android/avd" >> $GITHUB_ENV
           fi
 
-
-      - name: Android SDKs - list installed SDKs
-        run: sdkmanager --list_installed
-
       - name: Android SDKs - setup environment
         if: false
         run: yes y | sdkmanager --licenses > /dev/null
@@ -102,9 +98,10 @@ jobs:
 
       - name: Android Emulator - Create
         run: |
-          which sdkmanager
-          sdkmanager --install "platform-tools" "platforms;android-34" "system-images;android-34;default;x86_64" "emulator"
-          echo "no" | avdmanager create avd -n testing -k "system-images;android-34;default;x86_64" --device "pixel_6"
+          which avdmanager
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --list_installed
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-${ANDROID_API};default;x86_64" 
+          echo "no" | avdmanager create avd -n testing -k "system-images;android-${ANDROID_API};default;x86_64" --device "${ANDROID_PROFILE}"
           $ANDROID_HOME/emulator/emulator -list-avds
           nohup emulator -memory 4096 -avd testing -wipe-data -no-window -no-snapshot -noaudio -no-boot-anim 2>&1 > emulator.log &
 
@@ -114,9 +111,8 @@ jobs:
       #- name: Android - List AVDs
       #  run: emulator -list-avds
 
-      - name: Android - Boot
-        run: nohup emulator -memory 4096 -avd "${ANDROID_EMULATOR_NAME}" -wipe-data -no-window -no-snapshot -noaudio -no-boot-anim 2>&1 > emulator.log &
-
+      #- name: Android - Boot
+      #  run: nohup emulator -memory 4096 -avd "${ANDROID_EMULATOR_NAME}" -wipe-data -no-window -no-snapshot -noaudio -no-boot-anim 2>&1 > emulator.log &
 
       - name: Install Prerequisites
         run: |
@@ -210,12 +206,6 @@ jobs:
       - name: ADB Wait For Device
         run: adb wait-for-any-device
         timeout-minutes: 5
-
-      - name: Pause briefly
-        run: sleep 30
-
-      #- name: ADB Press Power Button
-      #  run: adb shell input keyevent 82
 
       - name: Check Android Emulator
         run: |
