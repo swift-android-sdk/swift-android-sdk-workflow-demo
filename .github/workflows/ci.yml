@@ -78,14 +78,23 @@ jobs:
           sudo rm -rf "/usr/local/share/boost"
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
 
+      - name: Setup Android Environment
+        run: |
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/emulator:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/${{ env.ANDROID_BUILD_TOOLS_VERSION }}" >> $GITHUB_PATH
+          # needed for Linux or else the emulator will be created in
+          # ~/.android/avd but it will be sought in ~/.config/.android/avd
+          if [[ "${RUNNER_OS}" == "Linux" ]]; then
+            echo "ANDROID_AVD_HOME=${XDG_CONFIG_HOME:-$HOME}/.android/avd" >> $GITHUB_ENV
+          fi
+
       - name: Android Emulator - Create
         run: |
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --list_installed
           EMULATOR_SPEC="system-images;android-${ANDROID_API};default;${ANDROID_EMULATOR_ARCH}"
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "${EMULATOR_SPEC}"
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager create avd -n "${ANDROID_EMULATOR_NAME}" -k "${EMULATOR_SPEC}" --device "${ANDROID_PROFILE}"
-          $ANDROID_HOME/emulator/emulator -list-avds
-          nohup $ANDROID_HOME/emulator/emulator -memory 4096 -avd "${ANDROID_EMULATOR_NAME}" -wipe-data -no-window -no-snapshot -noaudio -no-boot-anim 2>&1 > emulator.log &
+          sdkmanager --list_installed
+          sdkmanager --install "${EMULATOR_SPEC}"
+          yes | avdmanager create avd -n "${ANDROID_EMULATOR_NAME}" -k "${EMULATOR_SPEC}" --device "${ANDROID_PROFILE}"
+          emulator -list-avds
+          nohup emulator -memory 4096 -avd "${ANDROID_EMULATOR_NAME}" -wipe-data -no-window -no-snapshot -noaudio -no-boot-anim 2>&1 > emulator.log &
 
       #- name: Android - Find AVDs
       #  run: find ~/ -type d -name '*.avd'
