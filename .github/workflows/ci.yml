@@ -78,35 +78,10 @@ jobs:
           sudo rm -rf "/usr/local/share/boost"
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
 
-      - name: Setup Android Environment
-        run: |
-          echo "$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/emulator:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/${{ env.ANDROID_BUILD_TOOLS_VERSION }}" >> $GITHUB_PATH
-          # needed for Linux or else the emulator will be created in
-          # ~/.android/avd but it will be sought in ~/.config/.android/avd
-          if [[ "${RUNNER_OS}" == "Linux" ]]; then
-            echo "ANDROID_AVD_HOME=${XDG_CONFIG_HOME:-$HOME}/.android/avd" >> $GITHUB_ENV
-          fi
-
-      - name: Android SDKs - setup environment
-        if: false
-        run: yes y | sdkmanager --licenses > /dev/null
-
-      - name: Android SKDs - setup build tools
-        if: false
-        run: sdkmanager --install "build-tools;${BUILD_TOOLS_VERSION}" platform-tools "platforms;android-${ANDROID_API}" --channel="${ANDROID_CHANNEL}"
-
-      - name: Android SKDs - setup emulator
-        if: false
-        run: sdkmanager --install emulator --channel="${ANDROID_CHANNEL}"
-
-      - name: Android Emulator - download required images
-        if: false
-        run: sdkmanager --install "system-images;android-${ANDROID_API};${ANDROID_TARGET};${ANDROID_EMULATOR_ARCH}" --channel="${ANDROID_CHANNEL}"
-
       - name: Android Emulator - Create
         run: |
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --list_installed
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-${ANDROID_API};default;${EMULATOR_ARCH}" 
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-${ANDROID_API};default;${EMULATOR_ARCH}" --channel=3
           echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager create avd -n "${ANDROID_EMULATOR_NAME}" -k "system-images;android-${ANDROID_API};default;${EMULATOR_ARCH}" --device "${ANDROID_PROFILE}"
           $ANDROID_HOME/emulator/emulator -list-avds
           nohup $ANDROID_HOME/emulator/emulator -memory 4096 -avd "${ANDROID_EMULATOR_NAME}" -wipe-data -no-window -no-snapshot -noaudio -no-boot-anim 2>&1 > emulator.log &
