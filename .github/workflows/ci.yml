@@ -206,8 +206,6 @@ jobs:
           adb push $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/*/sysroot/usr/lib/${ANDROID_EMULATOR_ARCH_TRIPLE}-linux-android/libc++_shared.so /data/local/tmp/
           adb shell /data/local/tmp/hello
 
-      - run: ./android-ci.sh test swiftlang/swift-toolchain-sqlite
-
       - run: ./android-ci.sh test swiftlang/swift-markdown
 
       - run: ./android-ci.sh test swiftlang/swift-tools-support-core
@@ -223,6 +221,9 @@ jobs:
       - run: ./android-ci.sh test apple/swift-algorithms
 
       - run: ./android-ci.sh test apple/swift-atomics
+
+      # no tests in swift-toolchain-sqlite
+      - run: ./android-ci.sh build swiftlang/swift-toolchain-sqlite
 
       # build-only: tests work, but they take a very long time
       - run: ./android-ci.sh build apple/swift-collections
