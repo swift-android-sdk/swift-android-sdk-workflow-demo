@@ -71,6 +71,16 @@ jobs:
           sudo rm -rf "/usr/local/share/boost"
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
 
+      - name: Setup Android Environment
+        run: |
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/emulator:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/${{ env.ANDROID_BUILD_TOOLS_VERSION }}" >> $GITHUB_PATH
+          # needed for Linux or else the emulator will be created in
+          # ~/.android/avd but it will be sought in ~/.config/.android/avd
+          if [[ "${RUNNER_OS}" == "Linux" ]]; then
+            echo "ANDROID_AVD_HOME=${XDG_CONFIG_HOME:-$HOME}/.android/avd" >> $GITHUB_ENV
+          fi
+
+
       - name: Android SDKs - list installed SDKs
         run: sdkmanager --list_installed
 
@@ -169,15 +179,6 @@ jobs:
           # note that we must *not* have ANDROID_NDK_ROOT set!
           # https://github.com/swiftlang/swift-driver/pull/1879
           echo "ANDROID_NDK_ROOT=" >> $GITHUB_ENV
-
-      - name: Setup Android Environment
-        run: |
-          echo "$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/emulator:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/${{ env.ANDROID_BUILD_TOOLS_VERSION }}" >> $GITHUB_PATH
-          # needed for Linux or else the emulator will be created in
-          # ~/.android/avd but it will be sought in ~/.config/.android/avd
-          if [[ "${RUNNER_OS}" == "Linux" ]]; then
-            echo "ANDROID_AVD_HOME=${XDG_CONFIG_HOME:-$HOME}/.android/avd" >> $GITHUB_ENV
-          fi
 
       - name: Setup Swift SDK for Android
         run: |
