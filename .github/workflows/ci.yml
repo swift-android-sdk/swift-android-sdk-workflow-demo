@@ -206,8 +206,6 @@ jobs:
           adb push $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/*/sysroot/usr/lib/${ANDROID_EMULATOR_ARCH_TRIPLE}-linux-android/libc++_shared.so /data/local/tmp/
           adb shell /data/local/tmp/hello
 
-      - run: ./android-ci.sh test swiftlang/swift-tools-support-core
-
       - run: ./android-ci.sh test swiftlang/swift-syntax
 
       - run: ./android-ci.sh test swiftlang/swift-subprocess
@@ -219,6 +217,10 @@ jobs:
       - run: ./android-ci.sh test apple/swift-algorithms
 
       - run: ./android-ci.sh test apple/swift-atomics
+
+      # build-only because tests crash in NetrcTests.testNoErrorMixedAccount
+      # and tests use abslute file paths
+      - run: ./android-ci.sh build swiftlang/swift-tools-support-core
 
       # build-only because it tries to write to "/tmp/old.txt" and "/tmp/" does not exist
       - run: ./android-ci.sh build swiftlang/swift-markdown
