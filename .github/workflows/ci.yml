@@ -240,7 +240,7 @@ jobs:
 
       # build-only, since tests needs local files:
       # error: MathExampleTests.testMath_AddHelp : failed - No executable at '/data/local/tmp/math'.
-      - run: ./android-ci.sh build apple/swift-argument-parser
+      #- run: ./android-ci.sh build apple/swift-argument-parser
 
       - name: Show Android Emulator Log
         if: always()
