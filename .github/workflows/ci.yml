@@ -214,8 +214,6 @@ jobs:
 
       - run: ./android-ci.sh build swiftlang/swift-subprocess
 
-      - run: ./android-ci.sh build swiftlang/swift-java
-
       # build-only because it uses hardwired StringLiteralRepresentedLiteralValueTests.swift
       - run: ./android-ci.sh build swiftlang/swift-syntax
 
