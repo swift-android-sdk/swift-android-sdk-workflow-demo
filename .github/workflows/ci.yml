@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
   pull_request:
   schedule:
-    - cron: '0 1,7,13,20 * * *'
+    - cron: '0 13 * * *'
 
 jobs:
   install-sdk:
@@ -24,6 +24,13 @@ jobs:
             os: 'ubuntu-latest'
             ANDROID_API: 28
             NDK_VERSION: 'r28c'
+            EMULATOR_ARCH: 'x86_64'
+            EMULATOR_ARCH_TRIPLE: 'x86_64'
+
+          - name: 'macOS 15 X64 API 30'
+            os: 'macos-15-intel'
+            ANDROID_API: 30
+            NDK_VERSION: 'r27d'
             EMULATOR_ARCH: 'x86_64'
             EMULATOR_ARCH_TRIPLE: 'x86_64'
 
@@ -50,19 +57,9 @@ jobs:
           #  EMULATOR_ARCH_TRIPLE: 'aarch64'
 
     runs-on: ${{ matrix.os }}
-    env:
-      ANDROID_API: ${{ matrix.ANDROID_API }}
-      ANDROID_EMULATOR_ARCH: ${{ matrix.EMULATOR_ARCH }}
-      ANDROID_EMULATOR_ARCH_TRIPLE: ${{ matrix.EMULATOR_ARCH_TRIPLE }}
-      ANDROID_TARGET: 'default'
-      #ANDROID_BUILD_TOOLS_VERSION: 36.0.0
-      ANDROID_BUILD_TOOLS_VERSION: 'latest'
-      BUILD_TOOLS_VERSION: "35.0.0"
-      ANDROID_EMULATOR_NAME: 'demo'
-      ANDROID_PROFILE: "Nexus 10"
-      ANDROID_CHANNEL: "3"
-      ANDROID_NDK_VERSION: "${{ matrix.NDK_VERSION }}"
     steps:
+      - uses: actions/checkout@v4
+
       - name: Free Disk Space
         if: runner.os == 'Linux'
         run: |
@@ -70,6 +67,48 @@ jobs:
           sudo rm -rf /opt/ghc
           sudo rm -rf "/usr/local/share/boost"
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+
+      - name: Setup Android Environment
+        run: |
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
+          echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
+          echo "$ANDROID_HOME/build-tools/latest" >> $GITHUB_PATH
+          echo "$ANDROID_HOME/tools" >> $GITHUB_PATH
+          echo "$ANDROID_HOME/emulator" >> $GITHUB_PATH
+
+          echo "ANDROID_API=${{ matrix.ANDROID_API }}" >> $GITHUB_ENV
+          echo "ANDROID_EMULATOR_ARCH=${{ matrix.EMULATOR_ARCH }}" >> $GITHUB_ENV
+          echo "ANDROID_EMULATOR_ARCH_TRIPLE=${{ matrix.EMULATOR_ARCH_TRIPLE }}" >> $GITHUB_ENV
+          echo "ANDROID_TARGET=default" >> $GITHUB_ENV
+          #echo "ANDROID_PROFILE=Pixel 6" >> $GITHUB_ENV
+          echo "ANDROID_PROFILE=Nexus 10" >> $GITHUB_ENV
+          echo "ANDROID_CHANNEL=3" >> $GITHUB_ENV
+          echo "ANDROID_NDK_VERSION=${{ matrix.NDK_VERSION }}" >> $GITHUB_ENV
+
+          if [[ "${RUNNER_OS}" == "Linux" ]]; then
+            # needed for Linux or else the emulator will be created in
+            # ~/.android/avd but it will be sought in ~/.config/.android/avd
+            echo "ANDROID_AVD_HOME=${XDG_CONFIG_HOME:-$HOME}/.android/avd" >> $GITHUB_ENV
+
+            # enable KVM on Linux, else error on emulator launch:
+            # CPU acceleration status: This user doesn't have permissions to use KVM (/dev/kvm).
+            echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+            sudo udevadm control --reload-rules
+            sudo udevadm trigger --name-match=kvm
+          fi
+
+      - name: Create and Launch Android Emulator
+        run: |
+          EMULATOR_SPEC="system-images;android-${ANDROID_API};default;${ANDROID_EMULATOR_ARCH}"
+          EMULATOR_NAME="swiftemu"
+          sdkmanager --list_installed
+          yes | sdkmanager --licenses > /dev/null
+          sdkmanager --install "${EMULATOR_SPEC}" "emulator" "platform-tools" "platforms;android-${ANDROID_API}"
+          avdmanager create avd -n "${EMULATOR_NAME}" -k "${EMULATOR_SPEC}" --device "${ANDROID_PROFILE}"
+          emulator -list-avds
+          # launch the emulator in the background; we will cat the logs at the end
+          nohup emulator -memory 4096 -avd "${EMULATOR_NAME}" -wipe-data -no-window -no-snapshot -noaudio -no-boot-anim 2>&1 > emulator.log &
+          adb logcat 2>&1 > logcat.log &
 
       - name: Install Prerequisites
         run: |
@@ -138,19 +177,12 @@ jobs:
           # https://github.com/swiftlang/swift-driver/pull/1879
           echo "ANDROID_NDK_ROOT=" >> $GITHUB_ENV
 
-      - name: Setup Android Environment
-        run: |
-          echo "$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/emulator:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/${{ env.ANDROID_BUILD_TOOLS_VERSION }}" >> $GITHUB_PATH
-          # needed for Linux or else the emulator will be created in
-          # ~/.android/avd but it will be sought in ~/.config/.android/avd
-          if [[ "${RUNNER_OS}" == "Linux" ]]; then
-            echo "ANDROID_AVD_HOME=${XDG_CONFIG_HOME:-$HOME}/.android/avd" >> $GITHUB_ENV
-          fi
-
       - name: Setup Swift SDK for Android
         run: |
           cd ~/Library/org.swift.swiftpm || cd ${XDG_CONFIG_HOME}/swiftpm || cd ~/.local/swiftpm || cd ~/.swiftpm
           ./swift-sdks/${SWIFT_ANDROID_SDK_VERSION}*.artifactbundle/swift-android/scripts/setup-android-sdk.sh
+          cd ./swift-sdks/${SWIFT_ANDROID_SDK_VERSION}*.artifactbundle
+          echo "SWIFT_ANDROID_SDK_HOME=${PWD}" >> $GITHUB_ENV
 
       - name: Build Swift Executable for Android
         run: |
@@ -160,55 +192,12 @@ jobs:
           swiftly run swift build --swift-sdk "${ANDROID_EMULATOR_ARCH_TRIPLE}-unknown-linux-android${ANDROID_API}" --static-swift-stdlib
           file .build/debug/hello
 
-      - name: Enable KVM
-        if: runner.os == 'Linux'
-        run: |
-          if [[ "${RUNNER_ARCH}" == "X64" ]]; then
-            echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-            sudo udevadm control --reload-rules
-            sudo udevadm trigger --name-match=kvm
-          fi
-
-      - name: Android SDKs - list installed SDKs
-        run: sdkmanager --list_installed
-
-      - name: Android SDKs - setup environment
-        run: yes y | sdkmanager --licenses > /dev/null
-
-      - name: Android SKDs - setup build tools
-        run: sdkmanager --install "build-tools;${BUILD_TOOLS_VERSION}" platform-tools "platforms;android-${ANDROID_API}" --channel="${ANDROID_CHANNEL}"
-
-      - name: Android SKDs - setup emulator
-        run: sdkmanager --install emulator --channel="${ANDROID_CHANNEL}"
-
-      - name: Android Emulator - download required images
-        run: sdkmanager --install "system-images;android-${ANDROID_API};${ANDROID_TARGET};${ANDROID_EMULATOR_ARCH}" --channel="${ANDROID_CHANNEL}"
-
-      - name: Android Emulator - Create
-        run: avdmanager --verbose create avd --force -n "${ANDROID_EMULATOR_NAME}" --device "${ANDROID_PROFILE}" --abi "${ANDROID_TARGET}/${ANDROID_EMULATOR_ARCH}" --package "system-images;android-${ANDROID_API};${ANDROID_TARGET};${ANDROID_EMULATOR_ARCH}" --sdcard 512M
-
-      #- name: Android - Find AVDs
-      #  run: find ~/ -type d -name '*.avd'
-
-      #- name: Android - List AVDs
-      #  run: emulator -list-avds
-
-      - name: Android - Boot
-        run: nohup emulator -memory 4096 -avd "${ANDROID_EMULATOR_NAME}" -wipe-data -no-window -no-snapshot -noaudio -no-boot-anim 2>&1 > emulator.log &
-
-      - name: ADB Wait For Device
+      - name: Wait for Android Emulator
         run: adb wait-for-any-device
         timeout-minutes: 5
 
-      - name: Pause briefly
-        run: sleep 30
-
-      #- name: ADB Press Power Button
-      #  run: adb shell input keyevent 82
-
       - name: Check Android Emulator
-        run: |
-          adb shell 'echo Hello Android!'
+        run: adb shell 'echo Hello Android!'
 
       - name: Run Swift Executable on Android Emulator
         run: |
@@ -217,72 +206,47 @@ jobs:
           adb push $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/*/sysroot/usr/lib/${ANDROID_EMULATOR_ARCH_TRIPLE}-linux-android/libc++_shared.so /data/local/tmp/
           adb shell /data/local/tmp/hello
 
-      - name: Create run-tests script
-        run: |
-          cat > run-tests.sh << "EOF"
-          #!/bin/bash -ex
-          ORG=$(echo "${1}" | cut -d '/' -f 1)
-          PACKAGE=$(echo "${1}" | cut -d '/' -f 2)
+      - run: ./android-ci.sh test apple/swift-numerics
 
-          git clone https://github.com/${ORG}/${PACKAGE}
-          cd ${PACKAGE}
+      - run: ./android-ci.sh test apple/swift-algorithms
 
-          swiftly run swift build --swift-sdk "${ANDROID_EMULATOR_ARCH_TRIPLE}-unknown-linux-android${ANDROID_API}" --build-tests +"${SWIFT_TOOLCHAIN_VERSION}"
+      - run: ./android-ci.sh test apple/swift-atomics
 
-          adb push .build/debug/${PACKAGE}PackageTests.xctest /data/local/tmp/
-          # copy up any test resources
-          adb push .build/debug/*.resources /data/local/tmp/ || true
+      - run: ./android-ci.sh build swiftlang/swift-subprocess
 
-          # push potential dependent libraries
-          adb push $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/*/sysroot/usr/lib/${ANDROID_EMULATOR_ARCH_TRIPLE}-linux-android/libc++_shared.so /data/local/tmp/
+      # build-only because it uses hardwired StringLiteralRepresentedLiteralValueTests.swift
+      - run: ./android-ci.sh build swiftlang/swift-syntax
 
-          # Since we are building with --static-swift-stdlib, we don't
-          # need to copy any of the other libraries
-          cd ~/Library/org.swift.swiftpm || cd ${XDG_CONFIG_HOME}/swiftpm || cd ~/.local/swiftpm || cd ~/.swiftpm
-          adb push swift-sdks/${SWIFT_ANDROID_SDK_VERSION}*.artifactbundle/swift-android/swift-resources/usr/lib/swift-${ANDROID_EMULATOR_ARCH_TRIPLE}/android/*.so /data/local/tmp/
-          cd -
+      # build-only because tests crash in NetrcTests.testNoErrorMixedAccount
+      # and tests use abslute file paths
+      - run: ./android-ci.sh build swiftlang/swift-tools-support-core
 
-          adb shell ls /data/local/tmp/
+      # build-only because it tries to write to "/tmp/old.txt" and "/tmp/" does not exist
+      - run: ./android-ci.sh build swiftlang/swift-markdown
 
-          adb shell /data/local/tmp/${PACKAGE}PackageTests.xctest
-          EOF
+      # no tests in swift-toolchain-sqlite
+      - run: ./android-ci.sh build swiftlang/swift-toolchain-sqlite
 
-          chmod +x run-tests.sh
-          cat run-tests.sh
+      # build-only: tests work, but they take a very long time
+      - run: ./android-ci.sh build apple/swift-collections
 
-      - name: Run swift-collections tests
-        # too slow
-        if: false
-        run: ./run-tests.sh apple/swift-collections
+      # build-only: https://github.com/apple/swift-system/pull/272
+      - run: ./android-ci.sh build apple/swift-system
 
-      - name: Run swift-numerics tests
-        run: ./run-tests.sh apple/swift-numerics
+      # build-only: tests references Tests/ file paths by absolute filename
+      - run: ./android-ci.sh build apple/swift-crypto
 
-      - name: Run swift-algorithms tests
-        run: ./run-tests.sh apple/swift-algorithms
+      - run: ./android-ci.sh build apple/swift-nio
 
-      - name: Run swift-atomics tests
-        run: ./run-tests.sh apple/swift-atomics
+      # build-only, since tests needs local files:
+      # error: MathExampleTests.testMath_AddHelp : failed - No executable at '/data/local/tmp/math'.
+      #- run: ./android-ci.sh build apple/swift-argument-parser
 
-      - name: Run swift-system tests
-        run: ./run-tests.sh apple/swift-system
-
-      - name: Run swift-crypto tests
-        # needs: Tests/CryptoExtrasVectors/rfc-7914-scrypt.txt
-        if: false
-        run: ./run-tests.sh apple/swift-crypto
-
-      - name: Run swift-nio tests
-        if: false
-        run: ./run-tests.sh apple/swift-nio
-
-      - name: Run swift-argument-parser tests
-        # needs local files:
-        # error: MathExampleTests.testMath_AddHelp : failed - No executable at '/data/local/tmp/math'.
-        if: false
-        run: ./run-tests.sh apple/swift-argument-parser
-
-      - name: Android - Show Emulator Log
+      - name: Show Android Emulator Log
         if: always()
-        run: cat emulator.log || true
+        run: cat emulator.log
+
+      - name: Show Android Logcat Output
+        if: always()
+        run: cat logcat.log
 
