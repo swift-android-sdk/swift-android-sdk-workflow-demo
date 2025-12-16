@@ -63,13 +63,13 @@ jobs:
       - name: Free Disk Space
         if: runner.os == 'Linux'
         run: |
-          sudo du -skhc /usr/share/dotnet/
-          sudo du -skhc /usr/local/graalvm/
-          sudo du -skhc /usr/local/.ghcup/
-          sudo du -skhc /usr/local/share/powershell
-          sudo du -skhc /usr/local/share/chromium
-          sudo du -skhc /usr/local/lib/android
-          sudo du -skhc /usr/local/lib/node_modules
+          sudo du -skhc /usr/share/dotnet/ || true
+          sudo du -skhc /usr/local/graalvm/ || true
+          sudo du -skhc /usr/local/.ghcup/ || true
+          sudo du -skhc /usr/local/share/powershell || true
+          sudo du -skhc /usr/local/share/chromium || true
+          sudo du -skhc /usr/local/lib/android || true
+          sudo du -skhc /usr/local/lib/node_modules || true
 
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /opt/ghc
