@@ -63,18 +63,13 @@ jobs:
       - name: Free Disk Space
         if: runner.os == 'Linux'
         run: |
-          sudo du -skhc /usr/share/dotnet/ || true
-          sudo du -skhc /usr/local/graalvm/ || true
-          sudo du -skhc /usr/local/.ghcup/ || true
-          sudo du -skhc /usr/local/share/powershell || true
-          sudo du -skhc /usr/local/share/chromium || true
-          sudo du -skhc /usr/local/lib/android || true
-          sudo du -skhc /usr/local/lib/node_modules || true
-
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /opt/ghc
-          sudo rm -rf "/usr/local/share/boost"
+          df -h
+          sudo rm -rf /opt/google /usr/local/share/chromium
+          sudo rm -rf /opt/microsoft /usr/share/dotnet /usr/local/share/powershell
+          sudo rm -rf /opt/ghc /usr/local/.ghcup
+          sudo rm -rf /usr/local/share/boost
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          df -h
 
       - name: Setup Android Environment
         run: |
@@ -236,7 +231,8 @@ jobs:
       - run: ./android-ci.sh build swiftlang/swift-toolchain-sqlite
 
       # build-only: tests work, but they take a very long time
-      - run: ./android-ci.sh build apple/swift-collections
+      # disabled while collections is failing to build
+      #- run: ./android-ci.sh build apple/swift-collections
 
       # build-only: https://github.com/apple/swift-system/pull/272
       - run: ./android-ci.sh build apple/swift-system
